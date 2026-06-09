@@ -1,5 +1,8 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { headers } from 'next/headers';
+
+export const dynamic = 'force-dynamic';
 import { 
   Calendar, 
   CircleDollarSign, 
@@ -13,7 +16,8 @@ import {
   Clock,
   ChevronLeft,
   XCircle,
-  Share2
+  Share2,
+  FileDown
 } from 'lucide-react';
 import ShareButtons from './ShareButtons';
 import { getSupabase } from '@/lib/supabase';
@@ -34,6 +38,8 @@ export interface JobItem {
   application_end_date?: string;
   source_url?: string;
   category?: string;
+  logo_url?: string;
+  pdf_url?: string;
 }
 
 function formatThaiDate(dateString: string): string {
@@ -77,7 +83,9 @@ async function getJobById(id: string): Promise<JobItem | undefined> {
         isQuickScrape: false,
         application_end_date: data.application_end_date,
         source_url: data.source_url,
-        category: data.category
+        category: data.category,
+        logo_url: data.logo_url || undefined,
+        pdf_url: data.pdf_url || undefined
       };
     }
   } catch (e) {
@@ -91,7 +99,9 @@ async function getJobById(id: string): Promise<JobItem | undefined> {
     return {
       ...found,
       application_end_date: found.application_end_date || undefined,
-      source_url: found.officialUrl || undefined
+      source_url: found.officialUrl || undefined,
+      logo_url: found.logo_url || undefined,
+      pdf_url: found.pdf_url || undefined
     };
   }
   return undefined;
@@ -111,6 +121,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     ? `เปิดรับสมัคร: ${job.period} | วุฒิการศึกษา: ${job.requirements}`
     : 'ระบบสอบราชการและรับสมัครงานราชการไทย';
 
+  // Construct absolute origin URL for sharing image crawling
+  let origin = 'https://government-jobs-app.vercel.app';
+  try {
+    const headersList = await headers();
+    const host = headersList.get('host');
+    if (host) {
+      const proto = host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https';
+      origin = `${proto}://${host}`;
+    }
+  } catch (e) {
+    console.error('generateMetadata: failed to get headers', e);
+  }
+
+  const imageUrl = job?.logo_url
+    ? (job.logo_url.startsWith('http') ? job.logo_url : `${origin}${job.logo_url}`)
+    : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop';
+
   return {
     title,
     description,
@@ -122,7 +149,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       siteName: 'หางานราชการง่ายๆ',
       images: [
         {
-          url: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&auto=format&fit=crop',
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: title,
@@ -216,32 +243,42 @@ export default async function JobDetailPage({ params }: PageProps) {
           <div className="p-6 md:p-8 bg-slate-950 text-white relative overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.1),transparent)] pointer-events-none"></div>
             
-            <div className="relative z-10 space-y-4">
-              <div className="flex items-center gap-2.5">
-                <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/10 text-[10px] font-extrabold uppercase">
-                  {job.category || 'ข้าราชการ'}
-                </span>
-                
-                {isExpired ? (
-                  <span className="text-rose-400 text-[10px] font-extrabold flex items-center gap-1 bg-rose-400/10 px-2 py-0.5 rounded-md">
-                    • สิ้นสุดระยะเวลา
+            <div className="relative z-10 flex flex-col md:flex-row gap-6 items-start">
+              {job.logo_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={job.logo_url}
+                  alt={job.department}
+                  className="w-16 h-16 md:w-20 md:h-20 object-contain bg-white rounded-2xl p-2 border border-slate-800 shrink-0 shadow-lg"
+                />
+              )}
+              <div className="space-y-4 flex-1">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/10 text-[10px] font-extrabold uppercase">
+                    {job.category || 'ข้าราชการ'}
                   </span>
-                ) : (
-                  <span className="text-emerald-400 text-[10px] font-extrabold flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-md">
-                    • กำลังรับสมัคร
-                  </span>
-                )}
-              </div>
+                  
+                  {isExpired ? (
+                    <span className="text-rose-400 text-[10px] font-extrabold flex items-center gap-1 bg-rose-400/10 px-2 py-0.5 rounded-md">
+                      • สิ้นสุดระยะเวลา
+                    </span>
+                  ) : (
+                    <span className="text-emerald-400 text-[10px] font-extrabold flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-md">
+                      • กำลังรับสมัคร
+                    </span>
+                  )}
+                </div>
 
-              <h1 className="text-lg md:text-2xl font-extrabold leading-snug text-white">
-                {job.title}
-              </h1>
+                <h1 className="text-lg md:text-2xl font-extrabold leading-snug text-white">
+                  {job.title}
+                </h1>
 
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2 border-t border-slate-800 text-slate-300 text-xs">
-                <div className="flex items-center gap-1.5 font-medium">
-                  <Building2 size={14} className="text-slate-500" />
-                  <span>หน่วยงานผู้จัดสอบ:</span>
-                  <span className="text-white font-bold">{job.department}</span>
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2 border-t border-slate-800 text-slate-300 text-xs">
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <Building2 size={14} className="text-slate-500" />
+                    <span>หน่วยงานผู้จัดสอบ:</span>
+                    <span className="text-white font-bold">{job.department}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -312,12 +349,25 @@ export default async function JobDetailPage({ params }: PageProps) {
               </div>
 
               {/* Apply link button */}
-              <div className="w-full sm:w-auto text-right">
+              <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-3 justify-end">
+                {job.pdf_url && (
+                  <a
+                    id="btn-download-pdf-doc"
+                    href={job.pdf_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-red-50 hover:bg-red-100 border border-red-100 text-sm font-extrabold text-red-700 transition shadow-sm active:scale-95 duration-100 shrink-0"
+                  >
+                    <FileDown size={16} />
+                    <span>อ่านประกาศฉบับเต็ม (PDF)</span>
+                  </a>
+                )}
+
                 {isExpired ? (
                   <button
                     id="btn-apply-disabled"
                     disabled
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 text-sm font-extrabold cursor-not-allowed shadow-none"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-slate-100 text-slate-400 border border-slate-200 text-sm font-extrabold cursor-not-allowed shadow-none shrink-0"
                   >
                     <XCircle size={16} className="text-slate-300" />
                     <span>ปิดรับสมัครแล้ว</span>
@@ -328,7 +378,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                     href={job.officialUrl || job.source_url || 'https://www.gprocurement.go.th'}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-emerald-600 text-sm font-extrabold text-white hover:bg-emerald-700 transition shadow-md hover:shadow-lg active:scale-95 duration-100"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-emerald-600 text-sm font-extrabold text-white hover:bg-emerald-700 transition shadow-md hover:shadow-lg active:scale-95 duration-100 shrink-0"
                   >
                     <Globe size={16} />
                     <span>ไปยังเว็บไซต์สมัครงาน</span>
