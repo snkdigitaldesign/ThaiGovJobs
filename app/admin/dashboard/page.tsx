@@ -22,7 +22,10 @@ import {
   Shield,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  FileDown,
+  UploadCloud,
+  Image as ImageIcon
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -46,6 +49,8 @@ interface JobItem {
   application_start_date?: string;
   application_end_date?: string;
   source_url?: string;
+  logo_url?: string;
+  pdf_url?: string;
 }
 
 function formatThaiDate(dateString: string): string {
@@ -80,6 +85,8 @@ export default function AdminDashboard() {
   // Editing state
   const [editingJob, setEditingJob] = useState<JobItem | null>(null);
   const [submittingEdit, setSubmittingEdit] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   // Custom premium non-blocking dialog confirmation states
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -203,7 +210,9 @@ export default function AdminDashboard() {
       education_level: job.education_level || job.requirements?.split('|')[0]?.trim() || 'ปริญญาตรี',
       region: job.region || job.requirements?.split('|')[1]?.replace('พื้นที่:', '')?.trim() || 'กรุงเทพมหานคร',
       application_start_date: job.application_start_date || '',
-      application_end_date: job.application_end_date || ''
+      application_end_date: job.application_end_date || '',
+      logo_url: job.logo_url || '',
+      pdf_url: job.pdf_url || ''
     });
   };
 
@@ -233,7 +242,9 @@ export default function AdminDashboard() {
           application_start_date: editingJob.application_start_date || null,
           application_end_date: editingJob.application_end_date || null,
           source_url: editingJob.officialUrl || editingJob.source_url || '',
-          content: editingJob.description
+          content: editingJob.description,
+          logo_url: editingJob.logo_url || null,
+          pdf_url: editingJob.pdf_url || null
         })
       });
 
@@ -250,6 +261,54 @@ export default function AdminDashboard() {
       showFeedback('error', err.message || 'บันทึกแก้ไขไม่สำเร็จ');
     } finally {
       setSubmittingEdit(false);
+    }
+  };
+
+  const handleUploadFileEdit = async (e: React.ChangeEvent<HTMLInputElement>, isPdf: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file || !editingJob) return;
+
+    if (isPdf) {
+      if (file.type !== 'application/pdf') {
+        alert('กรุณาอัปโหลดเฉพาะไฟล์ PDF เท่านั้น');
+        return;
+      }
+      setUploadingPdf(true);
+    } else {
+      if (!file.type.startsWith('image/')) {
+        alert('กรุณาอัปโหลดไฟล์รูปภาพที่ถูกต้อง');
+        return;
+      }
+      setUploadingLogo(true);
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'อัปโหลดล้มเหลว');
+      }
+
+      if (isPdf) {
+        setEditingJob({ ...editingJob, pdf_url: data.url });
+      } else {
+        setEditingJob({ ...editingJob, logo_url: data.url });
+      }
+    } catch (err: any) {
+      alert(`ไม่สามารถอัปโหลดไฟล์ได้: ${err.message}`);
+    } finally {
+      if (isPdf) {
+        setUploadingPdf(false);
+      } else {
+        setUploadingLogo(false);
+      }
     }
   };
 
@@ -630,6 +689,108 @@ export default function AdminDashboard() {
                       placeholder="https://..."
                       className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm"
                     />
+                  </div>
+
+                  {/* File Uploads Section (ตราสัญลักษณ์หน่วยงาน & ไฟล์ PDF ประกาศ) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    
+                    {/* Logo Edit */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center gap-1">
+                        ตราสัญลักษณ์หน่วยงาน (Logo)
+                      </label>
+                      {editingJob.logo_url ? (
+                        <div className="relative border border-slate-200 bg-white p-2 rounded-xl flex items-center gap-2 flex-wrap">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={editingJob.logo_url}
+                            alt="Agency Logo"
+                            className="w-10 h-10 object-contain bg-slate-50 p-1 rounded-lg border border-slate-100 shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-semibold text-slate-700 truncate">อัปโหลดสำเร็จ</p>
+                            <button
+                              type="button"
+                              onClick={() => setEditingJob({ ...editingJob, logo_url: '' })}
+                              className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-0.5"
+                            >
+                              ลบออก
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5 transition rounded-xl p-3 text-center cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleUploadFileEdit(e, false)}
+                            disabled={uploadingLogo}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="space-y-0.5">
+                            {uploadingLogo ? (
+                              <div className="flex flex-col items-center gap-1 py-1">
+                                <Loader2 size={16} className="animate-spin text-emerald-500" />
+                                <span className="text-[10px] text-slate-500">กำลังอัปโหลด...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <ImageIcon size={18} className="text-slate-400 mx-auto" />
+                                <p className="text-[11px] font-semibold text-slate-600 font-sans">คลิกอัปโหลดรูป</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* PDF Edit */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center gap-1">
+                        ไฟล์ PDF ประกาศฉบับเต็ม
+                      </label>
+                      {editingJob.pdf_url ? (
+                        <div className="relative border border-slate-200 bg-white p-2 rounded-xl flex items-center gap-2 flex-wrap">
+                          <div className="p-1 rounded bg-red-50 text-red-600 shrink-0">
+                            <FileDown size={18} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-semibold text-slate-700 truncate">ประกาศฉบับเต็ม.pdf</p>
+                            <button
+                              type="button"
+                              onClick={() => setEditingJob({ ...editingJob, pdf_url: '' })}
+                              className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-0.5"
+                            >
+                              ลบออก
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5 transition rounded-xl p-3 text-center cursor-pointer">
+                          <input
+                            type="file"
+                            accept="application/pdf"
+                            onChange={(e) => handleUploadFileEdit(e, true)}
+                            disabled={uploadingPdf}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="space-y-0.5">
+                            {uploadingPdf ? (
+                              <div className="flex flex-col items-center gap-1 py-1">
+                                <Loader2 size={16} className="animate-spin text-emerald-500" />
+                                <span className="text-[10px] text-slate-500">กำลังอัปโหลด...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <UploadCloud size={18} className="text-slate-400 mx-auto" />
+                                <p className="text-[11px] font-semibold text-slate-600 font-sans">คลิกอัปโหลด PDF</p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
 
                   <div>
