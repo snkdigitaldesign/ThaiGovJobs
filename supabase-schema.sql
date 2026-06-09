@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS public.jobs (
   application_start_date DATE,
   application_end_date DATE,
   source_url TEXT,
+  logo_url TEXT,
+  pdf_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
