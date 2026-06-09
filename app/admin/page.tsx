@@ -193,59 +193,37 @@ export default function AdminPage() {
     addLog('info', 'Supabase Auth: ออกจากระบบเรียบร้อย สิทธิ์การจารึกข้อมูลและสิทธิ์แก้ไข RLS ถูกตั้งกลับเป็นตระกูลสิทธิ์เสรี (Guest Select only)');
   };
 
-  // Run Web scraping simulator (calling the edge function logic visually)
-  const triggerScrapeJobs = async () => {
-    addLog('info', '🔌 เรียกคำสั่งประมวลผล Edge Function [scrape-ocsc-jobs] เพื่อดาวน์โหลดหน้าข่าวจากศูนย์กลาง ก.พ...');
+  // Run Web scraping using our server-side API (Next.js server scraper)
+  const triggerScrapeJobs = async (source: 'ocsc' | 'pragard' | 'all' = 'all') => {
+    const sourceLabel = source === 'ocsc' ? 'สำนักงาน ก.พ.' : source === 'pragard' ? 'ประกาศผลสอบ.com' : 'ทุกแหล่งเว็บไซต์พร้อมกัน';
+    addLog('info', `🔌 รันระบบ Scraper เรียกดึงข้อมูลจาก: ${sourceLabel}...`);
     setIsUrlScraping(true);
     
-    setTimeout(() => {
-      const templates = [
-        {
-          raw_title: 'กรมอุทยานแห่งชาติ สัตว์ป่า และพันธุ์พืช รับสมัครบุคคลเพื่อเลือกสรรเป็นพนักงานราชการทั่วไป 42 อัตรา',
-          raw_content: 'ตำแหน่งนักวิชาการป่าไม้, นักวิชาการคอมพิวเตอร์ และเจ้าหน้าที่ธุรการ วุฒิการศึกษาระดับ ปริญญาตรี และปวส. เงินเดือนสูงสุด 18,000 บาท สมัครระหว่าง 20 มิถุนายน - 10 กรกฎาคม 2026',
-          original_url: 'https://job.ocsc.go.th/RegisterJob.aspx?id=dnp-forestry2026',
-          category: 'พนักงานราชการ',
-          education_level: 'ปริญญาตรี',
-          region: 'ทั่วประเทศ'
-        },
-        {
-          raw_title: 'กรมป่าไม้ เปิดรับสมัครสอบบรรจุข้าราชการ ตำแหน่งวิชาการป่าไม้ปฏิบัติการ',
-          raw_content: 'กรมป่าไม้สรรหาบุคคลเข้ารับราชการ 25 อัตรา วุฒิ ปริญญาตรี วารสารศาสตร์ เกษตรศาสตร์ ปฐพีวิทยา เงินเดือนสตาร์ทที่ 15,000 บาท รับสมัครออนไลน์',
-          original_url: 'https://job.ocsc.go.th/RegisterJob.aspx?id=forest-officer-2026',
-          category: 'ข้าราชการ',
-          education_level: 'ปริญญาตรี',
-          region: 'ภาคกลาง'
-        }
-      ];
+    try {
+      // ดึงรายการ URL เพื่อส่งไปตรวจสอบตัดซ้ำ (De-duplication) ที่ฝั่งเซิร์ฟเวอร์
+      const existingUrls = simRawRows.map(r => r.original_url).concat(simJobs.map(j => j.source_url || ''));
 
-      let added = 0;
-      let skipped = 0;
-      const updatedRaws = [...simRawRows];
-
-      templates.forEach(t => {
-        const isDup = updatedRaws.some(r => r.original_url === t.original_url);
-        if (isDup) {
-          skipped++;
-        } else {
-          updatedRaws.unshift({
-            id: 'raw-' + Math.floor(Math.random() * 1000 + 100),
-            raw_title: t.raw_title,
-            raw_content: t.raw_content,
-            original_url: t.original_url,
-            scraped_at: getNowTimestampString(),
-            is_processed: false,
-            category: t.category,
-            education_level: t.education_level,
-            region: t.region
-          });
-          added++;
-        }
+      const res = await fetch('/api/scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source, existingUrls })
       });
 
-      setSimRawRows(updatedRaws);
+      const result = await res.json();
+      if (result.success && result.data) {
+        const newlyAdded = result.data;
+        if (newlyAdded.length > 0) {
+          setSimRawRows(prev => [...newlyAdded, ...prev]);
+        }
+        addLog('success', `⚡ [Scraper Output] ${result.message}`);
+      } else {
+        throw new Error(result.error || 'การประมวลดึงข้อมูลขัดข้องทางระบบหลังบ้าน');
+      }
+    } catch (err: any) {
+      addLog('error', `❌ เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message || 'การเช็คสัญญานขัดข้อง'}`);
+    } finally {
       setIsUrlScraping(false);
-      addLog('success', `⚡ [Edge Function Output] บันทึกลงตาราง raw ข้อมูลคัดกรองใหม่สำเร็จ ${added} รายการ (ข้ามคิวรีซ้ำ ${skipped} รายการ)`);
-    }, 1500);
+    }
   };
 
   // Launch the Refine & Approve modal using live AI summaries or fallbacks
@@ -817,31 +795,54 @@ export default function AdminPage() {
               {/* TAB 1: DETECT NEWS */}
               {activeAdminTab === 'detect-news' && (
                 <div className="flex flex-col gap-4">
-                  <div className="bg-slate-900/40 backdrop-blur-md p-5.5 rounded-3xl border border-slate-850 shadow-lg">
-                    <span className="bg-amber-500/10 text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-full border border-amber-500/20 inline-block uppercase tracking-wide">
-                      Scrape & Structuring Queue
+                  <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-6 md:p-7 rounded-3xl border border-slate-800 shadow-xl">
+                    <span className="bg-amber-400/10 text-amber-400 text-[9.5px] font-black px-3 py-1 rounded-full border border-amber-400/20 inline-block uppercase tracking-wider">
+                      Database Web Scraper (Next.js Server-Authenticated)
                     </span>
-                    <h2 className="text-lg font-black text-white mt-1">คลังประวัติรอคัดกรองข้อมูล และอนุมัติจารึกตารางถาวร</h2>
-                    <p className="text-xs text-slate-400 leading-relaxed mt-1">
-                      ระบบคัดข่าวรอบยื่นสมัครงานทางระบบของสำนักงาน ก.พ. ผ่านบอทแบบกึ่งเรียลไทม์ กดปุ่ม &ldquo;ประมวลการสุ่มเรียบเรียง&rdquo; เพื่อวิเคราะห์สกัดข้อมูลแยกจำแนกเป็นเอกสารสมบูรณ์
+                    <h2 className="text-xl font-black text-white mt-2 flex items-center gap-2">
+                      <Database className="w-5 h-5 text-amber-400" />
+                      ระบบควบคุมสัญญาน Scraper สั่งดึงข่าวสารปฐมภูมิ
+                    </h2>
+                    <p className="text-xs text-slate-350 leading-relaxed mt-1.5 font-sans">
+                      หน่วยบัญชาการกลางสำหรับดึงประกาศรับสมัครงานและข่าวสารราชการไทยโดยตรงจากเว็บไซต์ต้นทางแบบออโตเมติก ระบบจะคัดกรองจัดสัดส่วนและทำการเช็คซ้ำ (De-duplication) ผ่าน URL ต้นทาง ก่อนจะเตรียมจารึกลงระบบตรวจสอบเพื่อให้แอดมินอนุมัติใช้งาน
                     </p>
 
-                    <div className="mt-4 flex gap-2">
-                      <button
-                        onClick={triggerScrapeJobs}
-                        disabled={isUrlScraping}
-                        className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs px-4.5 py-3 rounded-xl flex items-center gap-2 shadow-lg transition-transform hover:scale-102 cursor-pointer"
-                      >
-                        {isUrlScraping ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 animate-spin" /> กำลังดาวน์โหลดข้อมูลราชการ...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw className="w-4 h-4" /> เรียกส้มคำสั่งดึงบอทกลาง (Scraper Emulator)
-                          </>
-                        )}
-                      </button>
+                    <div className="mt-5 border-t border-slate-800/80 pt-4">
+                      <p className="text-xs text-amber-400 font-bold mb-3 flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4" /> สั่งทำงานดึงข่าวสารแมนนวลจำแนกตามเป้าหมาย (Manual Operations):
+                      </p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {/* ปุ่มดึง OCSC */}
+                        <button
+                          onClick={() => triggerScrapeJobs('ocsc')}
+                          disabled={isUrlScraping}
+                          className="bg-[#1e293b] hover:bg-slate-700/85 text-slate-100 font-extrabold text-xs px-4 py-3 rounded-xl flex items-center justify-center gap-2 border border-slate-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                        >
+                          <RefreshCw className={`w-4 h-4 text-blue-400 ${isUrlScraping ? 'animate-spin' : ''}`} />
+                          ดึงข้อมูลจาก ก.พ.
+                        </button>
+
+                        {/* ปุ่มดึง ประกาศผลสอบ */}
+                        <button
+                          onClick={() => triggerScrapeJobs('pragard')}
+                          disabled={isUrlScraping}
+                          className="bg-[#1e293b] hover:bg-slate-700/85 text-slate-100 font-extrabold text-xs px-4 py-3 rounded-xl flex items-center justify-center gap-2 border border-slate-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                        >
+                          <RefreshCw className={`w-4 h-4 text-emerald-450 ${isUrlScraping ? 'animate-spin' : ''}`} />
+                          ดึง ประกาศผลสอบ.com
+                        </button>
+
+                        {/* ปุ่มดึง ทุกแหล่งพร้อมกัน */}
+                        <button
+                          onClick={() => triggerScrapeJobs('all')}
+                          disabled={isUrlScraping}
+                          className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs px-4 py-3 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-amber-500/10 disabled:opacity-50 cursor-pointer"
+                        >
+                          <RefreshCw className={`w-4 h-4 text-slate-950 ${isUrlScraping ? 'animate-spin' : ''}`} />
+                          ดึงข้อมูลจากทุกแหล่งพร้อมกัน
+                        </button>
+                      </div>
                     </div>
                   </div>
 
