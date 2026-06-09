@@ -19,6 +19,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: '/api/uploads/:path*',
+      },
+    ];
+  },
 //   output: 'standalone',
   transpilePackages: ['motion'],
   webpack: (config, {dev}) => {
