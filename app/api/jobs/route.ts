@@ -197,6 +197,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let dbInsertionError: string | null = null;
+
     // Attempt insert into Supabase
     try {
       const supabase = getSupabaseAdmin() || getSupabaseWithAuth(token);
@@ -270,6 +272,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (dbErr: any) {
       console.warn('Supabase insertion failed, falling back to memory insert. Reason:', dbErr.message || dbErr);
+      dbInsertionError = dbErr.message || String(dbErr);
     }
 
     // Fallback to local memory storage insert
@@ -287,7 +290,7 @@ export async function POST(req: NextRequest) {
       isQuickScrape: jobData.isQuickScrape || false
     });
 
-    return NextResponse.json({ success: true, data: savedJob, persistedInDb: false });
+    return NextResponse.json({ success: true, data: savedJob, persistedInDb: false, dbError: dbInsertionError });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
