@@ -39,6 +39,9 @@ export async function POST(req: NextRequest) {
     }
 
     // --- STRATEGY 1: Attempt Durable Supabase Storage (Cloud CDN) ---
+    let sbErrorMessage = '';
+    const hasServiceRoleKey = !!(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY);
+
     try {
       const supabase = getSupabaseAdmin() || getSupabase();
       if (supabase) {
@@ -49,6 +52,10 @@ export async function POST(req: NextRequest) {
             contentType: file.type || 'application/octet-stream',
             upsert: true
           });
+
+        if (uploadError) {
+          sbErrorMessage = `Bucket "${targetBucket}": ${uploadError.message}`;
+        }
 
         if (uploadError && (
           uploadError.message?.toLowerCase().includes('not found') || 
@@ -78,10 +85,15 @@ export async function POST(req: NextRequest) {
                 
                 uploadData = retryUpload.data;
                 uploadError = retryUpload.error;
+              } else {
+                sbErrorMessage = `Auto-create bucket "${targetBucket}" failed: ${createErr.message}`;
               }
+            } else {
+              sbErrorMessage = `Bucket "${targetBucket}" does not exist, and cannot auto-create because SUPABASE_SERVICE_ROLE_KEY is missing in environment.`;
             }
           } catch (bucketErr: any) {
             console.error(`Error auto-creating bucket [${targetBucket}]:`, bucketErr.message);
+            sbErrorMessage = `Bucket creation exception: ${bucketErr.message}`;
           }
         }
 
@@ -131,14 +143,27 @@ export async function POST(req: NextRequest) {
                 provider: 'supabase',
                 bucket: fbBucket
               });
+            } else if (fbError) {
+              sbErrorMessage += ` | Fallback "${fbBucket}": ${fbError.message}`;
             }
-          } catch (err) {
-            // Ignore fallback bucket errors and try next
+          } catch (err: any) {
+            sbErrorMessage += ` | Fallback "${fbBucket}" exception: ${err.message}`;
           }
         }
       }
     } catch (sbErr: any) {
       console.warn('Resilient fallback active: Supabase Storage bypassed or failed:', sbErr.message);
+      sbErrorMessage = `Supabase exception: ${sbErr.message}`;
+    }
+
+    // On Vercel / Production environments, local storage write is read-only or volatile.
+    // If we have a Supabase URL and are running in production/Vercel, we MUST report the storage failure to the user!
+    const isVercel = process.env.VERCEL || process.env.NODE_ENV === 'production';
+    if (isVercel && sbErrorMessage) {
+      const hint = !hasServiceRoleKey ? '\nคำแนะนำ: กรุณาโหลดค่าแวดล้อม SUPABASE_SERVICE_ROLE_KEY ในเมนูตั้งค่า Vercel เพื่อใช้ในการจัดการสิทธิ์ถังข้อมูลอัปโหลดครับ' : '';
+      return NextResponse.json({
+        error: `ไม่สามารถอัปโหลดไฟล์ไปยังระบบฐานข้อมูลคลาวด์ได้:\n${sbErrorMessage}${hint}`
+      }, { status: 400 });
     }
 
     // --- STRATEGY 2: Fallback to Local Filesystem + Dynamic Route ---
