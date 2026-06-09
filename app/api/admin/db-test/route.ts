@@ -83,6 +83,8 @@ export async function GET() {
         { name: 'application_start_date', definition: 'application_start_date DATE' },
         { name: 'application_end_date', definition: 'application_end_date DATE' },
         { name: 'source_url', definition: 'source_url TEXT' },
+        { name: 'logo_url', definition: 'logo_url TEXT' },
+        { name: 'pdf_url', definition: 'pdf_url TEXT' },
         { name: 'created_at', definition: "created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())" }
       ];
 
