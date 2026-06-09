@@ -45,6 +45,10 @@ export default function NewJobFormPage() {
   const [pdfUrl, setPdfUrl] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [logoUploadProgress, setLogoUploadProgress] = useState(0);
+  const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
+  const [dragActiveLogo, setDragActiveLogo] = useState(false);
+  const [dragActivePdf, setDragActivePdf] = useState(false);
   
   const [category, setCategory] = useState('ข้าราชการ'); // ข้าราชการ/พนักงานราชการ/ลูกจ้าง/รัฐวิสาหกิจ
   const [educationLevel, setEducationLevel] = useState('ปริญญาตรี');
@@ -83,28 +87,39 @@ export default function NewJobFormPage() {
     checkAuth();
   }, [router]);
 
-  // Handle file uploads (Images & PDFs)
-  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>, isPdf: boolean) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // Unified File Upload with Progress simulation
+  const uploadFileWithProgress = async (file: File, isPdf: boolean) => {
     if (isPdf) {
       if (file.type !== 'application/pdf') {
         alert('กรุณาอัปโหลดเฉพาะไฟล์ PDF เท่านั้น');
         return;
       }
       setUploadingPdf(true);
+      setPdfUploadProgress(5);
     } else {
       if (!file.type.startsWith('image/')) {
         alert('กรุณาอัปโหลดไฟล์รูปภาพที่ถูกต้อง');
         return;
       }
       setUploadingLogo(true);
+      setLogoUploadProgress(5);
     }
+
+    let progress = 5;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 15) + 5;
+      if (progress > 93) progress = 93;
+      if (isPdf) {
+        setPdfUploadProgress(progress);
+      } else {
+        setLogoUploadProgress(progress);
+      }
+    }, 120);
 
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('bucket', isPdf ? 'pdfs' : 'logos');
 
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -125,12 +140,23 @@ export default function NewJobFormPage() {
         throw new Error(data.error || 'อัปโหลดล้มเหลว');
       }
 
+      clearInterval(interval);
       if (isPdf) {
+        setPdfUploadProgress(100);
         setPdfUrl(data.url);
+        setTimeout(() => setPdfUploadProgress(0), 800);
       } else {
+        setLogoUploadProgress(100);
         setLogoUrl(data.url);
+        setTimeout(() => setLogoUploadProgress(0), 800);
       }
     } catch (err: any) {
+      clearInterval(interval);
+      if (isPdf) {
+        setPdfUploadProgress(0);
+      } else {
+        setLogoUploadProgress(0);
+      }
       alert(`ไม่สามารถอัปโหลดไฟล์ได้: ${err.message}`);
     } finally {
       if (isPdf) {
@@ -138,6 +164,47 @@ export default function NewJobFormPage() {
       } else {
         setUploadingLogo(false);
       }
+    }
+  };
+
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>, isPdf: boolean) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await uploadFileWithProgress(file, isPdf);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent, isPdf: boolean) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isPdf) {
+      setDragActivePdf(true);
+    } else {
+      setDragActiveLogo(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent, isPdf: boolean) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isPdf) {
+      setDragActivePdf(false);
+    } else {
+      setDragActiveLogo(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, isPdf: boolean) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isPdf) {
+      setDragActivePdf(false);
+    } else {
+      setDragActiveLogo(false);
+    }
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      await uploadFileWithProgress(file, isPdf);
     }
   };
 
@@ -407,11 +474,12 @@ export default function NewJobFormPage() {
               
               {/* Logo Upload */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  ตราสัญลักษณ์หน่วยงาน (Logo)
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
+                  <span>ตราสัญลักษณ์หน่วยงาน (Logo)</span>
+                  {uploadingLogo && <span className="text-[10px] text-emerald-600 font-semibold animate-pulse">กำลังส่งไฟล์เข้าคลัง Storage...</span>}
                 </label>
                 {logoUrl ? (
-                  <div className="relative border border-slate-200 bg-white p-3 rounded-xl flex items-center gap-3">
+                  <div className="relative border border-slate-200 bg-white p-3 rounded-xl flex items-center gap-3 shadow-sm">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={logoUrl}
@@ -419,18 +487,30 @@ export default function NewJobFormPage() {
                       className="w-12 h-12 object-contain bg-slate-50 p-1 rounded-lg border border-slate-100"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-700 truncate">อัปโหลดเรียบร้อยแล้ว</p>
+                      <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                        <CheckCircle size={12} /> อัปโหลดและเชื่อมโยงเรียบร้อยแล้ว
+                      </p>
+                      <span className="text-[10px] text-slate-400 break-all truncate block mt-0.5">{logoUrl}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveFile(false)}
-                        className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-1 mt-0.5"
+                        className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-1 mt-1.5"
                       >
                         <Trash2 size={10} /> ลบรูปภาพ
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="relative border-2 border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5 transition rounded-xl p-4 text-center cursor-pointer">
+                  <div 
+                    onDragOver={(e) => handleDragOver(e, false)}
+                    onDragLeave={(e) => handleDragLeave(e, false)}
+                    onDrop={(e) => handleDrop(e, false)}
+                    className={`relative border-2 border-dashed transition-all duration-200 rounded-xl p-5 text-center cursor-pointer ${
+                      dragActiveLogo 
+                        ? "border-emerald-500 bg-emerald-50/20 shadow-md animate-pulse scale-[1.01]" 
+                        : "border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5"
+                    }`}
+                  >
                     <input
                       type="file"
                       accept="image/*"
@@ -440,15 +520,21 @@ export default function NewJobFormPage() {
                     />
                     <div className="space-y-1">
                       {uploadingLogo ? (
-                        <div className="flex flex-col items-center gap-1.5 py-2">
-                          <Loader2 size={20} className="animate-spin text-emerald-500" />
-                          <span className="text-xs text-slate-500">กำลังอัปโหลดรูปภาพ...</span>
+                        <div className="flex flex-col items-center gap-1.5 py-1">
+                          <Loader2 size={24} className="animate-spin text-emerald-500" />
+                          <span className="text-xs font-semibold text-emerald-600">กำลังอัปโหลดอัตโนมัติเข้าระบบ... {logoUploadProgress}%</span>
+                          <div className="w-full max-w-[150px] bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                            <div 
+                              className="bg-emerald-500 h-full rounded-full transition-all duration-150"
+                              style={{ width: `${logoUploadProgress}%` }}
+                            />
+                          </div>
                         </div>
                       ) : (
                         <>
-                          <ImageIcon size={24} className="text-slate-400 mx-auto" />
-                          <p className="text-xs font-semibold text-slate-600">คลิกหรือลากวางรูปโลโก้</p>
-                          <p className="text-[10px] text-slate-400">ขนาดแนะนำ: สี่เหลี่ยมจัตุรัส png, jpg</p>
+                          <ImageIcon size={26} className="text-slate-400 mx-auto" />
+                          <p className="text-xs font-semibold text-slate-705 text-slate-700">ลากไฟล์มาวางตรงนี้ หรือคลิกเพื่อค้นหารูปภาพ/ตราตราสัญลักษณ์</p>
+                          <p className="text-[10px] text-slate-400">ขนาดแนะนำ: สี่เหลี่ยมจัตุรัส png, jpg, webp หรือ svg</p>
                         </>
                       )}
                     </div>
@@ -458,27 +544,40 @@ export default function NewJobFormPage() {
 
               {/* PDF Announcement Upload */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  ไฟล์ PDF ประกาศฉบับเต็ม
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
+                  <span>ไฟล์ PDF ประกาศฉบับเต็ม</span>
+                  {uploadingPdf && <span className="text-[10px] text-emerald-600 font-semibold animate-pulse">กำลังอัปโหลดเอกสาร...</span>}
                 </label>
                 {pdfUrl ? (
-                  <div className="relative border border-slate-200 bg-white p-3 rounded-xl flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-red-50 text-red-600 shrink-0">
-                      <FileDown size={20} />
+                  <div className="relative border border-slate-200 bg-white p-3 rounded-xl flex items-center gap-3 shadow-sm">
+                    <div className="p-2.5 rounded-lg bg-red-50 text-red-600 shrink-0">
+                      <FileDown size={22} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-700 truncate">ประกาศฉบับเต็ม.pdf</p>
+                      <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                        <CheckCircle size={12} /> อัปโหลดเข้าสู่คลัง PDF เรียบร้อยแล้ว
+                      </p>
+                      <span className="text-[10px] text-slate-400 break-all truncate block mt-0.5">{pdfUrl}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveFile(true)}
-                        className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-1 mt-0.5"
+                        className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-1 mt-1.5"
                       >
                         <Trash2 size={10} /> ลบไฟล์ PDF
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="relative border-2 border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5 transition rounded-xl p-4 text-center cursor-pointer">
+                  <div 
+                    onDragOver={(e) => handleDragOver(e, true)}
+                    onDragLeave={(e) => handleDragLeave(e, true)}
+                    onDrop={(e) => handleDrop(e, true)}
+                    className={`relative border-2 border-dashed transition-all duration-200 rounded-xl p-5 text-center cursor-pointer ${
+                      dragActivePdf 
+                        ? "border-emerald-500 bg-emerald-50/20 shadow-md animate-pulse scale-[1.01]" 
+                        : "border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5"
+                    }`}
+                  >
                     <input
                       type="file"
                       accept="application/pdf"
@@ -488,15 +587,21 @@ export default function NewJobFormPage() {
                     />
                     <div className="space-y-1">
                       {uploadingPdf ? (
-                        <div className="flex flex-col items-center gap-1.5 py-2">
-                          <Loader2 size={20} className="animate-spin text-emerald-500" />
-                          <span className="text-xs text-slate-500">กำลังอัปโหลดไฟล์ PDF...</span>
+                        <div className="flex flex-col items-center gap-1.5 py-1">
+                          <Loader2 size={24} className="animate-spin text-emerald-500" />
+                          <span className="text-xs font-semibold text-emerald-600">กำลังโอนถ่ายไฟล์ PDF สำเร็จ... {pdfUploadProgress}%</span>
+                          <div className="w-full max-w-[150px] bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                            <div 
+                              className="bg-emerald-500 h-full rounded-full transition-all duration-150"
+                              style={{ width: `${pdfUploadProgress}%` }}
+                            />
+                          </div>
                         </div>
                       ) : (
                         <>
-                          <UploadCloud size={24} className="text-slate-400 mx-auto" />
-                          <p className="text-xs font-semibold text-slate-600">คลิกเพื่อเลือกไฟล์ประกาศ PDF</p>
-                          <p className="text-[10px] text-slate-400">รองรับไฟล์เอกสาร .pdf เท่านั้น</p>
+                          <UploadCloud size={26} className="text-slate-400 mx-auto" />
+                          <p className="text-xs font-semibold text-slate-700">ลากและวางเอกสาร PDF ตรงนี้ หรือคลิกเลือกไฟล์ประกาศ</p>
+                          <p className="text-[10px] text-slate-400">รองรับระบบเอกสารประวัติจัดซื้อ/ประกาศสอบ .pdf เท่านั้น</p>
                         </>
                       )}
                     </div>
@@ -605,13 +710,18 @@ export default function NewJobFormPage() {
               <button
                 id="btn-save-job-submit"
                 type="submit"
-                disabled={submitting}
-                className="px-8 py-3 rounded-2xl bg-slate-900 border border-slate-900 text-sm font-semibold text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.98] disabled:opacity-75"
+                disabled={submitting || uploadingLogo || uploadingPdf}
+                className="px-8 py-3 rounded-2xl bg-slate-900 border border-slate-900 text-sm font-semibold text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <>
                     <Loader2 size={16} className="animate-spin text-emerald-400" />
                     <span>กำลังบันทึกข้อมูลเข้าระบบ...</span>
+                  </>
+                ) : uploadingLogo || uploadingPdf ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin text-emerald-400" />
+                    <span>กำลังอัปโหลดไฟล์...</span>
                   </>
                 ) : (
                   'บันทึกประกาศงาน'
