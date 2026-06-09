@@ -1,6 +1,6 @@
 {
-  "name": "Thai Gov Jobs SQL Tool",
-  "description": "เครื่องมือสร้างและจำลอง SQL Script สำหรับฐานข้อมูลงานราชการ (Supabase/PostgreSQL) พร้อมระบบทดลองตั้งค่า RLS และโครงสร้างตาราง",
+  "name": "หางานราชการง่ายๆ",
+  "description": "ระบบค้นหาและดึงประกาศงานราชการด้วยระบบบอร์ดอัจฉริยะ",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
