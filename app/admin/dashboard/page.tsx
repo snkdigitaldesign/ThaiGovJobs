@@ -87,6 +87,10 @@ export default function AdminDashboard() {
   const [submittingEdit, setSubmittingEdit] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [logoUploadProgress, setLogoUploadProgress] = useState(0);
+  const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
+  const [dragActiveLogo, setDragActiveLogo] = useState(false);
+  const [dragActivePdf, setDragActivePdf] = useState(false);
 
   // Custom premium non-blocking dialog confirmation states
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -264,9 +268,8 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUploadFileEdit = async (e: React.ChangeEvent<HTMLInputElement>, isPdf: boolean) => {
-    const file = e.target.files?.[0];
-    if (!file || !editingJob) return;
+  const uploadFileWithProgressEdit = async (file: File, isPdf: boolean) => {
+    if (!editingJob) return;
 
     if (isPdf) {
       if (file.type !== 'application/pdf') {
@@ -274,17 +277,31 @@ export default function AdminDashboard() {
         return;
       }
       setUploadingPdf(true);
+      setPdfUploadProgress(5);
     } else {
       if (!file.type.startsWith('image/')) {
         alert('กรุณาอัปโหลดไฟล์รูปภาพที่ถูกต้อง');
         return;
       }
       setUploadingLogo(true);
+      setLogoUploadProgress(5);
     }
+
+    let progress = 5;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 15) + 5;
+      if (progress > 93) progress = 93;
+      if (isPdf) {
+        setPdfUploadProgress(progress);
+      } else {
+        setLogoUploadProgress(progress);
+      }
+    }, 120);
 
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('bucket', isPdf ? 'pdfs' : 'logos');
 
       const res = await fetch('/api/upload', {
         method: 'POST',
@@ -296,12 +313,23 @@ export default function AdminDashboard() {
         throw new Error(data.error || 'อัปโหลดล้มเหลว');
       }
 
+      clearInterval(interval);
       if (isPdf) {
+        setPdfUploadProgress(100);
         setEditingJob({ ...editingJob, pdf_url: data.url });
+        setTimeout(() => setPdfUploadProgress(0), 800);
       } else {
+        setLogoUploadProgress(100);
         setEditingJob({ ...editingJob, logo_url: data.url });
+        setTimeout(() => setLogoUploadProgress(0), 800);
       }
     } catch (err: any) {
+      clearInterval(interval);
+      if (isPdf) {
+        setPdfUploadProgress(0);
+      } else {
+        setLogoUploadProgress(0);
+      }
       alert(`ไม่สามารถอัปโหลดไฟล์ได้: ${err.message}`);
     } finally {
       if (isPdf) {
@@ -309,6 +337,47 @@ export default function AdminDashboard() {
       } else {
         setUploadingLogo(false);
       }
+    }
+  };
+
+  const handleUploadFileEdit = async (e: React.ChangeEvent<HTMLInputElement>, isPdf: boolean) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await uploadFileWithProgressEdit(file, isPdf);
+    }
+  };
+
+  const handleDragOverEdit = (e: React.DragEvent, isPdf: boolean) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isPdf) {
+      setDragActivePdf(true);
+    } else {
+      setDragActiveLogo(true);
+    }
+  };
+
+  const handleDragLeaveEdit = (e: React.DragEvent, isPdf: boolean) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isPdf) {
+      setDragActivePdf(false);
+    } else {
+      setDragActiveLogo(false);
+    }
+  };
+
+  const handleDropEdit = async (e: React.DragEvent, isPdf: boolean) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isPdf) {
+      setDragActivePdf(false);
+    } else {
+      setDragActiveLogo(false);
+    }
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      await uploadFileWithProgressEdit(file, isPdf);
     }
   };
 
@@ -696,11 +765,12 @@ export default function AdminDashboard() {
                     
                     {/* Logo Edit */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center gap-1">
-                        ตราสัญลักษณ์หน่วยงาน (Logo)
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
+                        <span>ตราสัญลักษณ์หน่วยงาน (Logo)</span>
+                        {uploadingLogo && <span className="text-[10px] text-emerald-600 font-semibold animate-pulse">กำลังอัปโหลด...</span>}
                       </label>
                       {editingJob.logo_url ? (
-                        <div className="relative border border-slate-200 bg-white p-2 rounded-xl flex items-center gap-2 flex-wrap">
+                        <div className="relative border border-slate-200 bg-white p-2.5 rounded-xl flex items-center gap-2 flex-wrap shadow-xs">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={editingJob.logo_url}
@@ -708,18 +778,30 @@ export default function AdminDashboard() {
                             className="w-10 h-10 object-contain bg-slate-50 p-1 rounded-lg border border-slate-100 shrink-0"
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="text-[11px] font-semibold text-slate-700 truncate">อัปโหลดสำเร็จ</p>
+                            <p className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                              <CheckCircle2 size={10} /> อัปโหลดสำเร็จ
+                            </p>
+                            <span className="text-[9px] text-slate-400 break-all truncate block">{editingJob.logo_url}</span>
                             <button
                               type="button"
                               onClick={() => setEditingJob({ ...editingJob, logo_url: '' })}
-                              className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-0.5"
+                              className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-0.5 mt-1"
                             >
-                              ลบออก
+                              <Trash2 size={9} /> ลบออก
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <div className="relative border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5 transition rounded-xl p-3 text-center cursor-pointer">
+                        <div 
+                          onDragOver={(e) => handleDragOverEdit(e, false)}
+                          onDragLeave={(e) => handleDragLeaveEdit(e, false)}
+                          onDrop={(e) => handleDropEdit(e, false)}
+                          className={`relative border border-dashed transition-all duration-200 rounded-xl p-3 text-center cursor-pointer ${
+                            dragActiveLogo 
+                              ? "border-emerald-500 bg-emerald-50/20 shadow-xs scale-[1.01]" 
+                              : "border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5"
+                          }`}
+                        >
                           <input
                             type="file"
                             accept="image/*"
@@ -731,12 +813,18 @@ export default function AdminDashboard() {
                             {uploadingLogo ? (
                               <div className="flex flex-col items-center gap-1 py-1">
                                 <Loader2 size={16} className="animate-spin text-emerald-500" />
-                                <span className="text-[10px] text-slate-500">กำลังอัปโหลด...</span>
+                                <span className="text-[10px] text-slate-500">อัปโหลด... {logoUploadProgress}%</span>
+                                <div className="w-full max-w-[100px] bg-slate-100 rounded-full h-1 overflow-hidden mt-0.5">
+                                  <div 
+                                    className="bg-emerald-500 h-full rounded-full transition-all duration-150"
+                                    style={{ width: `${logoUploadProgress}%` }}
+                                  />
+                                </div>
                               </div>
                             ) : (
                               <>
                                 <ImageIcon size={18} className="text-slate-400 mx-auto" />
-                                <p className="text-[11px] font-semibold text-slate-600 font-sans">คลิกอัปโหลดรูป</p>
+                                <p className="text-[11px] font-semibold text-slate-700">ลากรูปภาพมาวาง หรือคลิกอัปโหลด</p>
                               </>
                             )}
                           </div>
@@ -746,27 +834,40 @@ export default function AdminDashboard() {
 
                     {/* PDF Edit */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center gap-1">
-                        ไฟล์ PDF ประกาศฉบับเต็ม
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
+                        <span>ไฟล์ PDF ประกาศฉบับเต็ม</span>
+                        {uploadingPdf && <span className="text-[10px] text-emerald-600 font-semibold animate-pulse">กำลังอัปโหลด...</span>}
                       </label>
                       {editingJob.pdf_url ? (
-                        <div className="relative border border-slate-200 bg-white p-2 rounded-xl flex items-center gap-2 flex-wrap">
+                        <div className="relative border border-slate-200 bg-white p-2.5 rounded-xl flex items-center gap-2 flex-wrap shadow-xs">
                           <div className="p-1 rounded bg-red-50 text-red-600 shrink-0">
                             <FileDown size={18} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[11px] font-semibold text-slate-700 truncate">ประกาศฉบับเต็ม.pdf</p>
+                            <p className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                              <CheckCircle2 size={10} /> อัปโหลดสำเร็จ
+                            </p>
+                            <span className="text-[9px] text-slate-400 break-all truncate block">{editingJob.pdf_url}</span>
                             <button
                               type="button"
                               onClick={() => setEditingJob({ ...editingJob, pdf_url: '' })}
-                              className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-0.5"
+                              className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-0.5 mt-1"
                             >
-                              ลบออก
+                              <Trash2 size={9} /> ลบออก
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <div className="relative border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5 transition rounded-xl p-3 text-center cursor-pointer">
+                        <div 
+                          onDragOver={(e) => handleDragOverEdit(e, true)}
+                          onDragLeave={(e) => handleDragLeaveEdit(e, true)}
+                          onDrop={(e) => handleDropEdit(e, true)}
+                          className={`relative border border-dashed transition-all duration-200 rounded-xl p-3 text-center cursor-pointer ${
+                            dragActivePdf 
+                              ? "border-emerald-500 bg-emerald-50/20 shadow-xs scale-[1.01]" 
+                              : "border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5"
+                          }`}
+                        >
                           <input
                             type="file"
                             accept="application/pdf"
@@ -778,12 +879,18 @@ export default function AdminDashboard() {
                             {uploadingPdf ? (
                               <div className="flex flex-col items-center gap-1 py-1">
                                 <Loader2 size={16} className="animate-spin text-emerald-500" />
-                                <span className="text-[10px] text-slate-500">กำลังอัปโหลด...</span>
+                                <span className="text-[10px] text-slate-500">อัปโหลด... {pdfUploadProgress}%</span>
+                                <div className="w-full max-w-[100px] bg-slate-100 rounded-full h-1 overflow-hidden mt-0.5">
+                                  <div 
+                                    className="bg-emerald-500 h-full rounded-full transition-all duration-150"
+                                    style={{ width: `${pdfUploadProgress}%` }}
+                                  />
+                                </div>
                               </div>
                             ) : (
                               <>
                                 <UploadCloud size={18} className="text-slate-400 mx-auto" />
-                                <p className="text-[11px] font-semibold text-slate-600 font-sans">คลิกอัปโหลด PDF</p>
+                                <p className="text-[11px] font-semibold text-slate-700">ลากไฟล์ PDF มาวาง หรือคลิกอัปโหลด</p>
                               </>
                             )}
                           </div>
@@ -816,13 +923,18 @@ export default function AdminDashboard() {
                   <button
                     id="btn-admin-edit-submit"
                     type="submit"
-                    disabled={submittingEdit}
-                    className="px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-2"
+                    disabled={submittingEdit || uploadingLogo || uploadingPdf}
+                    className="px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-900 hover:bg-slate-800 disabled:opacity-70 disabled:cursor-not-allowed text-white font-bold text-xs flex items-center gap-2"
                   >
                     {submittingEdit ? (
                       <>
                         <Loader2 className="animate-spin text-emerald-400" size={14} />
                         <span>กำลังอัปเดตข้อมูล...</span>
+                      </>
+                    ) : uploadingLogo || uploadingPdf ? (
+                      <>
+                        <Loader2 className="animate-spin text-emerald-400" size={14} />
+                        <span>กำลังอัปโหลดไฟล์...</span>
                       </>
                     ) : (
                       'บันทึกการแก้ไข'
