@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { getSupabase } from '@/lib/supabase';
+import { getSupabase, getSupabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,17 +40,57 @@ export async function POST(req: NextRequest) {
 
     // --- STRATEGY 1: Attempt Durable Supabase Storage (Cloud CDN) ---
     try {
-      const supabase = getSupabase();
+      const supabase = getSupabaseAdmin() || getSupabase();
       if (supabase) {
         console.log(`Attempting to upload file to Supabase [${targetBucket}] bucket...`);
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        let { data: uploadData, error: uploadError } = await supabase.storage
           .from(targetBucket)
           .upload(uniqueFilename, buffer, {
             contentType: file.type || 'application/octet-stream',
             upsert: true
           });
 
+        if (uploadError && (
+          uploadError.message?.toLowerCase().includes('not found') || 
+          uploadError.message?.toLowerCase().includes('does not exist') || 
+          (uploadError as any).status === 404 || 
+          (uploadError as any).statusCode === '404'
+        )) {
+          console.log(`Bucket [${targetBucket}] missing. Attempting to programmatically create it as a public bucket...`);
+          try {
+            const adminClient = getSupabaseAdmin();
+            if (adminClient) {
+              const { error: createErr } = await adminClient.storage.createBucket(targetBucket, {
+                public: true,
+                fileSizeLimit: 52428800 // 50MB
+              });
+
+              if (!createErr) {
+                console.log(`Successfully created bucket [${targetBucket}]. Setting public properties and retrying upload...`);
+                await adminClient.storage.updateBucket(targetBucket, { public: true }).catch(() => {});
+                
+                const retryUpload = await supabase.storage
+                  .from(targetBucket)
+                  .upload(uniqueFilename, buffer, {
+                    contentType: file.type || 'application/octet-stream',
+                    upsert: true
+                  });
+                
+                uploadData = retryUpload.data;
+                uploadError = retryUpload.error;
+              }
+            }
+          } catch (bucketErr: any) {
+            console.error(`Error auto-creating bucket [${targetBucket}]:`, bucketErr.message);
+          }
+        }
+
         if (!uploadError && uploadData) {
+          const adminClient = getSupabaseAdmin();
+          if (adminClient) {
+            await adminClient.storage.updateBucket(targetBucket, { public: true }).catch(() => {});
+          }
+
           const { data: { publicUrl } } = supabase.storage
             .from(targetBucket)
             .getPublicUrl(uniqueFilename);
