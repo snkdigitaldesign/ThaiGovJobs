@@ -95,6 +95,8 @@ export async function PUT(
       return NextResponse.json({ error: 'กรุณากรอกข้อมูลด่วน ชื่อประกาศและหน่วยงาน' }, { status: 400 });
     }
 
+    let dbUpdateError: string | null = null;
+
     // Attempt Supabase update
     try {
       const supabase = getSupabaseAdmin() || getSupabaseWithAuth(token);
@@ -147,6 +149,7 @@ export async function PUT(
       }
     } catch (dbErr: any) {
       console.warn('Supabase DB update failed, falling back to memory update. Reason:', dbErr.message || dbErr);
+      dbUpdateError = dbErr.message || String(dbErr);
     }
 
     // Memory storage fallback update
@@ -166,7 +169,7 @@ export async function PUT(
         logo_url: body.logo_url || store[index].logo_url,
         pdf_url: body.pdf_url || store[index].pdf_url,
       };
-      return NextResponse.json({ success: true, data: store[index], message: 'แก้ไขข้อมูลใน Memory สำเร็จ' });
+      return NextResponse.json({ success: true, data: store[index], message: 'แก้ไขข้อมูลใน Memory สำเร็จ', dbError: dbUpdateError });
     }
 
     return NextResponse.json({ error: 'ไม่พบประกาศเพื่อทำการแก้ไข' }, { status: 404 });
