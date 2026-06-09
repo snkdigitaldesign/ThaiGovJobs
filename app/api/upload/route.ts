@@ -23,13 +23,28 @@ export async function POST(req: NextRequest) {
       .substring(0, 50);
     const uniqueFilename = `${Date.now()}-${baseName}${fileExtension}`;
 
+    // Determine the target bucket based on parameter or file type
+    const requestBucket = formData.get('bucket')?.toString();
+    let targetBucket = 'uploads';
+    if (requestBucket) {
+      targetBucket = requestBucket;
+    } else {
+      const isPdfFile = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+      const isImageFile = file.type.startsWith('image/');
+      if (isPdfFile) {
+        targetBucket = 'pdfs';
+      } else if (isImageFile) {
+        targetBucket = 'logos';
+      }
+    }
+
     // --- STRATEGY 1: Attempt Durable Supabase Storage (Cloud CDN) ---
     try {
       const supabase = getSupabase();
       if (supabase) {
-        // Try 'jobs' bucket
+        console.log(`Attempting to upload file to Supabase [${targetBucket}] bucket...`);
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('jobs')
+          .from(targetBucket)
           .upload(uniqueFilename, buffer, {
             contentType: file.type || 'application/octet-stream',
             upsert: true
@@ -37,43 +52,50 @@ export async function POST(req: NextRequest) {
 
         if (!uploadError && uploadData) {
           const { data: { publicUrl } } = supabase.storage
-            .from('jobs')
+            .from(targetBucket)
             .getPublicUrl(uniqueFilename);
 
-          console.log('Successfully uploaded to Supabase [jobs] bucket:', publicUrl);
+          console.log(`Successfully uploaded to Supabase [${targetBucket}] bucket:`, publicUrl);
           return NextResponse.json({
             success: true,
             url: publicUrl,
             filename: file.name,
             size: file.size,
-            provider: 'supabase'
+            provider: 'supabase',
+            bucket: targetBucket
           });
         }
 
-        // Try 'uploads' bucket as secondary fallback
-        const { data: uploadData2, error: uploadError2 } = await supabase.storage
-          .from('uploads')
-          .upload(uniqueFilename, buffer, {
-            contentType: file.type || 'application/octet-stream',
-            upsert: true
-          });
+        console.warn(`Supabase Storage upload failed under primary bucket [${targetBucket}]:`, uploadError?.message);
 
-        if (!uploadError2 && uploadData2) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('uploads')
-            .getPublicUrl(uniqueFilename);
-
-          console.log('Successfully uploaded to Supabase [uploads] bucket:', publicUrl);
-          return NextResponse.json({
-            success: true,
-            url: publicUrl,
-            filename: file.name,
-            size: file.size,
-            provider: 'supabase'
-          });
+        // Fallback try other standard buckets (like 'jobs' or 'uploads') just in case
+        const fallbacks = ['jobs', 'uploads', 'pdfs', 'logos'].filter(b => b !== targetBucket);
+        for (const fbBucket of fallbacks) {
+          try {
+            const { data: fbData, error: fbError } = await supabase.storage
+              .from(fbBucket)
+              .upload(uniqueFilename, buffer, {
+                contentType: file.type || 'application/octet-stream',
+                upsert: true
+              });
+            if (!fbError && fbData) {
+              const { data: { publicUrl } } = supabase.storage
+                .from(fbBucket)
+                .getPublicUrl(uniqueFilename);
+              console.log(`Successfully uploaded to Supabase fallback [${fbBucket}] bucket:`, publicUrl);
+              return NextResponse.json({
+                success: true,
+                url: publicUrl,
+                filename: file.name,
+                size: file.size,
+                provider: 'supabase',
+                bucket: fbBucket
+              });
+            }
+          } catch (err) {
+            // Ignore fallback bucket errors and try next
+          }
         }
-
-        console.warn('Supabase Storage uploads failed, fell back to local storage. Jobs error:', uploadError?.message, 'Uploads error:', uploadError2?.message);
       }
     } catch (sbErr: any) {
       console.warn('Resilient fallback active: Supabase Storage bypassed or failed:', sbErr.message);
