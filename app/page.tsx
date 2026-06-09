@@ -75,6 +75,8 @@ export default function Home() {
     'ราชการส่วนท้องถิ่น'
   ];
 
+  const [thaiDateInLocale, setThaiDateInLocale] = useState<string>('');
+
   // Fetch all jobs with retry support
   const fetchJobs = async (retryCount = 3, delayMs = 1500) => {
     try {
@@ -110,6 +112,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchJobs();
+    setThaiDateInLocale(new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -239,7 +242,7 @@ export default function Home() {
             <div>
               <h3 className="text-xs font-bold text-slate-700">ระบบปกป้องข้อมูลหมดอายุทำงานอยู่</h3>
               <p className="text-[10px] text-slate-400 font-sans">
-                คัดกรองเฉพาะหัวข้อที่มีวันปิดรับสมัคร ตั้งแต่ <strong className="text-emerald-600 font-bold">{new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}</strong> เป็นต้นไป เท่านั้น
+                คัดกรองเฉพาะหัวข้อที่มีวันปิดรับสมัคร ตั้งแต่ <strong className="text-emerald-600 font-bold">{thaiDateInLocale || '...'}</strong> เป็นต้นไป เท่านั้น
               </p>
             </div>
           </div>
