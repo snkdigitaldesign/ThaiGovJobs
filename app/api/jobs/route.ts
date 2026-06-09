@@ -23,6 +23,8 @@ export interface JobItem {
   region?: string;
   application_start_date?: string;
   application_end_date?: string;
+  logo_url?: string;
+  pdf_url?: string;
 }
 
 function formatThaiDate(dateString: string): string {
@@ -154,7 +156,9 @@ export async function GET() {
           education_level: item.education_level,
           region: item.region,
           application_start_date: item.application_start_date,
-          application_end_date: item.application_end_date
+          application_end_date: item.application_end_date,
+          logo_url: item.logo_url,
+          pdf_url: item.pdf_url
         }));
 
         // Merge manual in-memory entries to keep them synchronized (such as those saved under mock bypass)
@@ -208,7 +212,9 @@ export async function POST(req: NextRequest) {
         salary: jobData.salary || 'ตามระเบียบการ',
         application_start_date: jobData.application_start_date || null,
         application_end_date: jobData.application_end_date || null,
-        source_url: jobData.officialUrl || jobData.source_url || 'https://www.gprocurement.go.th'
+        source_url: jobData.officialUrl || jobData.source_url || 'https://www.gprocurement.go.th',
+        logo_url: jobData.logo_url || null,
+        pdf_url: jobData.pdf_url || null
       };
 
       const { data, error } = await supabase
@@ -240,7 +246,9 @@ export async function POST(req: NextRequest) {
           education_level: data.education_level,
           region: data.region,
           application_start_date: data.application_start_date,
-          application_end_date: data.application_end_date
+          application_end_date: data.application_end_date,
+          logo_url: data.logo_url,
+          pdf_url: data.pdf_url
         };
 
         // Also update memory cache to keep in sync
@@ -253,6 +261,8 @@ export async function POST(req: NextRequest) {
           requirements: mappedSaved.requirements,
           description: mappedSaved.description,
           officialUrl: mappedSaved.officialUrl,
+          logo_url: mappedSaved.logo_url,
+          pdf_url: mappedSaved.pdf_url,
           isQuickScrape: false
         });
 
@@ -272,6 +282,8 @@ export async function POST(req: NextRequest) {
       requirements: jobData.requirements || 'รับสมัครวุฒิการศึกษาตามประกาศรับตรง',
       description: jobData.description || 'ไม่มีรายละเอียดเพิ่มเติม',
       officialUrl: jobData.officialUrl || 'https://www.google.com',
+      logo_url: jobData.logo_url || '',
+      pdf_url: jobData.pdf_url || '',
       isQuickScrape: jobData.isQuickScrape || false
     });
 
