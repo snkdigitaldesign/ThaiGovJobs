@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 let supabaseClient: SupabaseClient | null = null;
+let supabaseAdminClient: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
   if (!supabaseClient) {
@@ -18,6 +19,26 @@ export function getSupabase(): SupabaseClient {
     });
   }
   return supabaseClient;
+}
+
+export function getSupabaseAdmin(): SupabaseClient | null {
+  if (!supabaseAdminClient) {
+    const url = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+
+    if (!url || !serviceKey) {
+      console.warn('Note: Supabase admin client cannot be created because SUPABASE_SERVICE_ROLE_KEY is missing.');
+      return null;
+    }
+    
+    supabaseAdminClient = createClient(url, serviceKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      }
+    });
+  }
+  return supabaseAdminClient;
 }
 
 export function getSupabaseWithAuth(token?: string): SupabaseClient {
