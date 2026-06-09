@@ -59,37 +59,41 @@ function formatThaiDate(dateString: string): string {
 
 // Fetch single job details from Supabase or memory store
 async function getJobById(id: string): Promise<JobItem | undefined> {
-  try {
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('jobs')
-      .select('*')
-      .eq('id', id)
-      .single();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-    if (!error && data) {
-      return {
-        id: data.id,
-        title: data.title,
-        department: data.department,
-        salary: data.salary || 'ตามระเบียบการ',
-        vacancies: 'ตามประกาศ',
-        period: (data.application_start_date && data.application_end_date)
-          ? `รับสมัครระหว่างวันที่ ${formatThaiDate(data.application_start_date)} - ${formatThaiDate(data.application_end_date)}`
-          : 'ไม่มีกำหนดวันหมดอายุ',
-        requirements: `${data.education_level || 'ไม่จำกัดวุฒิ'} | พื้นที่: ${data.region || 'ทั่วประเทศ'} | หมวดหมู่: ${data.category || 'งานราชการ'}`,
-        description: data.content || 'ไม่มีรายละเอียดเพิ่มเติม',
-        officialUrl: data.source_url || 'https://www.gprocurement.go.th',
-        isQuickScrape: false,
-        application_end_date: data.application_end_date,
-        source_url: data.source_url,
-        category: data.category,
-        logo_url: data.logo_url || undefined,
-        pdf_url: data.pdf_url || undefined
-      };
+  if (isUuid) {
+    try {
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (!error && data) {
+        return {
+          id: data.id,
+          title: data.title,
+          department: data.department,
+          salary: data.salary || 'ตามระเบียบการ',
+          vacancies: 'ตามประกาศ',
+          period: (data.application_start_date && data.application_end_date)
+            ? `รับสมัครระหว่างวันที่ ${formatThaiDate(data.application_start_date)} - ${formatThaiDate(data.application_end_date)}`
+            : 'ไม่มีกำหนดวันหมดอายุ',
+          requirements: `${data.education_level || 'ไม่จำกัดวุฒิ'} | พื้นที่: ${data.region || 'ทั่วประเทศ'} | หมวดหมู่: ${data.category || 'งานราชการ'}`,
+          description: data.content || 'ไม่มีรายละเอียดเพิ่มเติม',
+          officialUrl: data.source_url || 'https://www.gprocurement.go.th',
+          isQuickScrape: false,
+          application_end_date: data.application_end_date,
+          source_url: data.source_url,
+          category: data.category,
+          logo_url: data.logo_url || undefined,
+          pdf_url: data.pdf_url || undefined
+        };
+      }
+    } catch (e) {
+      console.warn('getJobById: Supabase failed, using memory fallback');
     }
-  } catch (e) {
-    console.warn('getJobById: Supabase failed, using memory fallback');
   }
 
   // Fallback to memory store if database is offline, not found in DB, or not provisioned yet
