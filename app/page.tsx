@@ -41,6 +41,8 @@ export interface JobItem {
   region?: string;
   application_start_date?: string;
   application_end_date?: string;
+  logo_url?: string;
+  pdf_url?: string;
 }
 
 export default function Home() {
@@ -383,46 +385,56 @@ export default function Home() {
                       {/* Accent color strip */}
                       <div className="absolute top-0 left-0 right-0 h-[3px] bg-slate-100 group-hover:bg-gradient-to-r group-hover:from-emerald-500 group-hover:to-teal-500 transition-colors"></div>
 
-                      <div className="space-y-4">
-                        {/* Upper Badges & Meta */}
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold tracking-tight border border-emerald-100/50">
-                            {job.category || job.requirements?.split('|')?.[2]?.replace('หมวดหมู่:', '')?.trim() || 'ข้าราชการ'}
-                          </span>
-                          
-                          <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            มีผลสมัครได้อยู่
-                          </span>
-                        </div>
-
-                        {/* Position job Title */}
-                        <h4 className="font-bold text-slate-800 group-hover:text-emerald-700 transition duration-150 text-sm md:text-base leading-snug line-clamp-2">
-                          {job.title}
-                        </h4>
-
-                        {/* Core Details Spec List */}
-                        <div className="space-y-2 text-xs text-slate-500">
-                          {/* Department info */}
-                          <div className="flex items-center gap-2.5">
-                            <Building2 size={14} className="text-slate-400 shrink-0" />
-                            <span className="font-semibold text-slate-700">{job.department}</span>
+                      <div className="flex gap-4 items-start">
+                        {job.logo_url && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={job.logo_url}
+                            alt={job.department}
+                            className="w-12 h-12 md:w-14 md:h-14 object-contain bg-slate-50 p-1.5 rounded-xl border border-slate-100 shrink-0 self-start"
+                          />
+                        )}
+                        <div className="space-y-4 flex-1 min-w-0">
+                          {/* Upper Badges & Meta */}
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold tracking-tight border border-emerald-100/50">
+                              {job.category || job.requirements?.split('|')?.[2]?.replace('หมวดหมู่:', '')?.trim() || 'ข้าราชการ'}
+                            </span>
+                            
+                            <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                              มีผลสมัครได้อยู่
+                            </span>
                           </div>
 
-                          {/* Period duration info */}
-                          <div className="flex items-center gap-2.5">
-                            <Calendar size={14} className="text-slate-400 shrink-0" />
-                            <span className="text-slate-600 line-clamp-1">{job.period}</span>
-                          </div>
+                          {/* Position job Title */}
+                          <h4 className="font-bold text-slate-800 group-hover:text-emerald-700 transition duration-150 text-sm md:text-base leading-snug line-clamp-2">
+                            {job.title}
+                          </h4>
 
-                          {/* Level criteria display */}
-                          <div className="flex items-start gap-2.5">
-                            <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold shrink-0 mt-0.5">
-                              วุฒิที่ระบุ
-                            </span>
-                            <span className="text-slate-500 line-clamp-1">
-                              {job.education_level || job.requirements?.split('|')?.[0]?.trim() || 'ปริญญาตรีขึ้นไป'}
-                            </span>
+                          {/* Core Details Spec List */}
+                          <div className="space-y-2 text-xs text-slate-500">
+                            {/* Department info */}
+                            <div className="flex items-center gap-2.5">
+                              <Building2 size={14} className="text-slate-400 shrink-0" />
+                              <span className="font-semibold text-slate-700">{job.department}</span>
+                            </div>
+
+                            {/* Period duration info */}
+                            <div className="flex items-center gap-2.5">
+                              <Calendar size={14} className="text-slate-400 shrink-0" />
+                              <span className="text-slate-600 line-clamp-1">{job.period}</span>
+                            </div>
+
+                            {/* Level criteria display */}
+                            <div className="flex items-start gap-2.5">
+                              <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold shrink-0 mt-0.5">
+                                วุฒิที่ระบุ
+                              </span>
+                              <span className="text-slate-500 line-clamp-1">
+                                {job.education_level || job.requirements?.split('|')?.[0]?.trim() || 'ปริญญาตรีขึ้นไป'}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
