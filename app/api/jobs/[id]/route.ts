@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getSupabase, getSupabaseWithAuth } from '@/lib/supabase';
+import { getSupabase, getSupabaseWithAuth, getSupabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,15 +45,18 @@ export async function GET(
 
     // Try fetching from Supabase first
     try {
-      const supabase = getSupabase();
-      const { data, error } = await supabase
-        .from('jobs')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      if (isUuid) {
+        const supabase = getSupabase();
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('*')
+          .eq('id', id)
+          .single();
 
-      if (!error && data) {
-        return NextResponse.json({ success: true, data });
+        if (!error && data) {
+          return NextResponse.json({ success: true, data });
+        }
       }
     } catch (e) {
       console.warn('Supabase fetch single job failed, falling back to memory.');
@@ -94,7 +97,7 @@ export async function PUT(
 
     // Attempt Supabase update
     try {
-      const supabase = getSupabaseWithAuth(token);
+      const supabase = getSupabaseAdmin() || getSupabaseWithAuth(token);
       
       const dbRow = {
         title: body.title,
@@ -187,7 +190,7 @@ export async function DELETE(
 
     // Try deleting from Supabase
     try {
-      const supabase = getSupabaseWithAuth(token);
+      const supabase = getSupabaseAdmin() || getSupabaseWithAuth(token);
       const { error } = await supabase
         .from('jobs')
         .delete()
