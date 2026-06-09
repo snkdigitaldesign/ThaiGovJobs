@@ -24,7 +24,7 @@ export function getSupabase(): SupabaseClient {
 export function getSupabaseAdmin(): SupabaseClient | null {
   if (!supabaseAdminClient) {
     const url = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
     if (!url || !serviceKey) {
       console.warn('Note: Supabase admin client cannot be created because SUPABASE_SERVICE_ROLE_KEY is missing.');
