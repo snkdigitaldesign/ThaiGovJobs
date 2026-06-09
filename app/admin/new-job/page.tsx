@@ -16,7 +16,11 @@ import {
   PlusCircle,
   FileText,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Image as ImageIcon,
+  UploadCloud,
+  Trash2,
+  FileDown
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -37,6 +41,10 @@ export default function NewJobFormPage() {
   const [department, setDepartment] = useState('');
   const [salary, setSalary] = useState('');
   const [officialUrl, setOfficialUrl] = useState(''); // source_url (ก.พ. ต้นทาง)
+  const [logoUrl, setLogoUrl] = useState('');
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
   
   const [category, setCategory] = useState('ข้าราชการ'); // ข้าราชการ/พนักงานราชการ/ลูกจ้าง/รัฐวิสาหกิจ
   const [educationLevel, setEducationLevel] = useState('ปริญญาตรี');
@@ -75,14 +83,75 @@ export default function NewJobFormPage() {
     checkAuth();
   }, [router]);
 
+  // Handle file uploads (Images & PDFs)
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>, isPdf: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (isPdf) {
+      if (file.type !== 'application/pdf') {
+        alert('กรุณาอัปโหลดเฉพาะไฟล์ PDF เท่านั้น');
+        return;
+      }
+      setUploadingPdf(true);
+    } else {
+      if (!file.type.startsWith('image/')) {
+        alert('กรุณาอัปโหลดไฟล์รูปภาพที่ถูกต้อง');
+        return;
+      }
+      setUploadingLogo(true);
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      let data: any;
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const rawText = await res.text();
+        console.error('Upload failed with server response:', rawText.substring(0, 500));
+        throw new Error('เซิร์ฟเวอร์ตอบกลับไม่ถูกต้องระหว่างการอัปโหลดไฟล์ กรุณาลองใหม่อีกครั้ง');
+      }
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'อัปโหลดล้มเหลว');
+      }
+
+      if (isPdf) {
+        setPdfUrl(data.url);
+      } else {
+        setLogoUrl(data.url);
+      }
+    } catch (err: any) {
+      alert(`ไม่สามารถอัปโหลดไฟล์ได้: ${err.message}`);
+    } finally {
+      if (isPdf) {
+        setUploadingPdf(false);
+      } else {
+        setUploadingLogo(false);
+      }
+    }
+  };
+
+  const handleRemoveFile = (isPdf: boolean) => {
+    if (isPdf) {
+      setPdfUrl('');
+    } else {
+      setLogoUrl('');
+    }
+  };
+
   // Handle submit and insert into Supabase jobs table
   const handleSubmitNewJob = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !department || !salary) {
-      setErrorOnSubmit('กรุณากรอกข้อมูลสำคัญที่มีสัญลักษณ์ (*) ให้ครบถ้วน');
-      return;
-    }
-
     try {
       setSubmitting(true);
       setErrorOnSubmit(null);
@@ -107,11 +176,21 @@ export default function NewJobFormPage() {
           region,
           application_start_date: startDate || null,
           application_end_date: endDate || null,
-          description // Markdown content
+          description, // Markdown content
+          logo_url: logoUrl || null,
+          pdf_url: pdfUrl || null
         }),
       });
 
-      const data = await res.json();
+      let data: any;
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const rawText = await res.text();
+        console.error('Server returned non-JSON:', rawText.substring(0, 500));
+        throw new Error('เซิร์ฟเวอร์ยังไม่พร้อมใช้งานหรือเกิดข้อผิดพลาดในการประมวลผล (ได้รับรูปแบบ HTML) กรุณารอสักครู่ (2-3 วินาที) แล้วกดบันทึกใหม่อีกครั้งครับ');
+      }
 
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'บันทึกประกาศงานไม่สำเร็จ');
@@ -121,7 +200,7 @@ export default function NewJobFormPage() {
       if (persisted) {
         setSuccessMsg('✨ บันทึกประกาศงานราชการลงกองข้อมูล Supabase สำเร็จเรียบร้อยแล้วถาวร!');
       } else {
-        setSuccessMsg('⚠️ บันทึกสำเร็จเสมือน (ลงหน่วยความจำชั่วคราว) เท่านั้น เนื่องจากตาราง Supabase ของท่านมีปัญหา/ขาดช่องคอลัมน์ "department" กรุณาไปแก้ไขโครงสร้างดีบีบนบอร์ดของท่านเพื่อให้คงอยู่ถาวร');
+        setSuccessMsg('⚠️ บันทึกสำเร็จเสมือน (ลงหน่วยความจำชั่วคราว) เท่านั้น เนื่องจากตาราง Supabase ของท่านมีปัญหา/ขาดช่องคอลัมน์ "logo_url" หรือ "pdf_url" กรุณาไปแก้ไขโครงสร้างดีบีบนบอร์ดของท่านเพื่อให้คงอยู่ถาวร');
       }
       
       // Clear form inputs
@@ -130,8 +209,10 @@ export default function NewJobFormPage() {
       setSalary('');
       setOfficialUrl('');
       setDescription('');
+      setLogoUrl('');
+      setPdfUrl('');
       
-      // Transition back after delay (longer if fell back to memory so they can read the warning)
+      // Transition back after delay
       setTimeout(() => {
         router.push('/admin/dashboard');
       }, persisted ? 2000 : 5000);
@@ -184,8 +265,8 @@ export default function NewJobFormPage() {
               <span>ตรวจพบโครงสร้างตารางในฐานข้อมูล Supabase ไม่สมบูรณ์:</span>
             </div>
             <p className="leading-relaxed font-sans">
-              ตารางระบบหลัก <code>jobs</code> ของคุณมีการขาดคอลัมน์ที่จำเป็น (เช่น <code>department</code>) บันทึกใดๆ ที่ป้อนเข้ามาในช่วงเวลานี้จะถูกจัดเก็บไว้ใน <strong className="text-amber-900">หน่วยความจำสำรองแทนชั่วคราวเท่านั้น</strong> 
-              เราแนะนำให้กลับไปจัดการแก้ไขเรื่องโครงสร้างตาราง DB ในหน้าหลักของควบคุมแผงผู้ดูแลระบบเสียก่อน
+              ตารางระบบหลัก <code>jobs</code> ของคุณมีการขาดคอลัมน์ที่จำเป็น (เช่น <code>logo_url</code> หรือ <code>pdf_url</code>) บันทึกใดๆ ที่ป้อนเข้ามาในช่วงเวลานี้จะถูกจัดเก็บไว้ใน <strong className="text-amber-900">หน่วยความจำสำรองแทนชั่วคราวเท่านั้น</strong> 
+              เราแนะนำให้ปรับปรุงโครงสร้างตาราง โดยรันสคริปต์ SQL ในหน้าควบคุมแผงผู้ดูแลระบบ
             </p>
           </div>
         )}
@@ -319,6 +400,110 @@ export default function NewJobFormPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* File Uploads Section (ตราสัญลักษณ์หน่วยงาน & ไฟล์ PDF ประกาศ) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+              
+              {/* Logo Upload */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  ตราสัญลักษณ์หน่วยงาน (Logo)
+                </label>
+                {logoUrl ? (
+                  <div className="relative border border-slate-200 bg-white p-3 rounded-xl flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={logoUrl}
+                      alt="Agency Logo"
+                      className="w-12 h-12 object-contain bg-slate-50 p-1 rounded-lg border border-slate-100"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-700 truncate">อัปโหลดเรียบร้อยแล้ว</p>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(false)}
+                        className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-1 mt-0.5"
+                      >
+                        <Trash2 size={10} /> ลบรูปภาพ
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative border-2 border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5 transition rounded-xl p-4 text-center cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleUploadFile(e, false)}
+                      disabled={uploadingLogo}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <div className="space-y-1">
+                      {uploadingLogo ? (
+                        <div className="flex flex-col items-center gap-1.5 py-2">
+                          <Loader2 size={20} className="animate-spin text-emerald-500" />
+                          <span className="text-xs text-slate-500">กำลังอัปโหลดรูปภาพ...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <ImageIcon size={24} className="text-slate-400 mx-auto" />
+                          <p className="text-xs font-semibold text-slate-600">คลิกหรือลากวางรูปโลโก้</p>
+                          <p className="text-[10px] text-slate-400">ขนาดแนะนำ: สี่เหลี่ยมจัตุรัส png, jpg</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* PDF Announcement Upload */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  ไฟล์ PDF ประกาศฉบับเต็ม
+                </label>
+                {pdfUrl ? (
+                  <div className="relative border border-slate-200 bg-white p-3 rounded-xl flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-red-50 text-red-600 shrink-0">
+                      <FileDown size={20} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-700 truncate">ประกาศฉบับเต็ม.pdf</p>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(true)}
+                        className="text-[10px] text-rose-500 font-bold hover:underline flex items-center gap-1 mt-0.5"
+                      >
+                        <Trash2 size={10} /> ลบไฟล์ PDF
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative border-2 border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5 transition rounded-xl p-4 text-center cursor-pointer">
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(e) => handleUploadFile(e, true)}
+                      disabled={uploadingPdf}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <div className="space-y-1">
+                      {uploadingPdf ? (
+                        <div className="flex flex-col items-center gap-1.5 py-2">
+                          <Loader2 size={20} className="animate-spin text-emerald-500" />
+                          <span className="text-xs text-slate-500">กำลังอัปโหลดไฟล์ PDF...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <UploadCloud size={24} className="text-slate-400 mx-auto" />
+                          <p className="text-xs font-semibold text-slate-600">คลิกเพื่อเลือกไฟล์ประกาศ PDF</p>
+                          <p className="text-[10px] text-slate-400">รองรับไฟล์เอกสาร .pdf เท่านั้น</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
             </div>
 
             {/* 4. Calendar date selectors */}
