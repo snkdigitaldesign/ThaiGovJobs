@@ -89,6 +89,12 @@ export default function NewJobFormPage() {
 
   // Unified File Upload with Progress simulation
   const uploadFileWithProgress = async (file: File, isPdf: boolean) => {
+    // Check file size (Vercel serverless functions limit payload to 4.5MB)
+    if (file.size > 4 * 1024 * 1024) {
+      alert(`ขนาดไฟล์ของท่านคือ ${(file.size / (1024 * 1024)).toFixed(2)}MB ซึ่งมีขนาดใหญ่เกินกว่ากำหนด (จำกัดไม่เกิน 4.0MB)\nกรุณาลดขนาดไฟล์ลงก่อนอัปโหลด เพื่อให้เข้ากันได้กับขีดจำกัดเซิร์ฟเวอร์คลาวด์ Vercel ครับ`);
+      return;
+    }
+
     if (isPdf) {
       if (file.type !== 'application/pdf') {
         alert('กรุณาอัปโหลดเฉพาะไฟล์ PDF เท่านั้น');
@@ -267,7 +273,8 @@ export default function NewJobFormPage() {
       if (persisted) {
         setSuccessMsg('✨ บันทึกประกาศงานราชการลงกองข้อมูล Supabase สำเร็จเรียบร้อยแล้วถาวร!');
       } else {
-        setSuccessMsg('⚠️ บันทึกสำเร็จเสมือน (ลงหน่วยความจำชั่วคราว) เท่านั้น เนื่องจากตาราง Supabase ของท่านมีปัญหา/ขาดช่องคอลัมน์ "logo_url" หรือ "pdf_url" กรุณาไปแก้ไขโครงสร้างดีบีบนบอร์ดของท่านเพื่อให้คงอยู่ถาวร');
+        const dbErrString = data.dbError ? `\n\n[ข้อผิดพลาดฐานข้อมูล]: ${data.dbError}` : '';
+        setSuccessMsg(`⚠️ บันทึกสำเร็จสแตนด์อโลน (ลงหน่วยความจำชั่วคราวเท่านั้น) เนื่องจากไม่สามารถเซฟเข้าฐานข้อมูล Supabase ทันทีได้${dbErrString}\n\nกรุณาตรวจสอบว่ามีคอลัมน์ชื่อตรงตามไฟล์ supabase-schema.sql หรือตั้งค่าแวดล้อมแอดมินหรือยังครับ`);
       }
       
       // Clear form inputs
