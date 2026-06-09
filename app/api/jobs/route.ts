@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getSupabase, getSupabaseWithAuth } from '@/lib/supabase';
+import { getSupabase, getSupabaseWithAuth, getSupabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
 
     // Attempt insert into Supabase
     try {
-      const supabase = getSupabaseWithAuth(token);
+      const supabase = getSupabaseAdmin() || getSupabaseWithAuth(token);
       
       // Map frontend fields (from scraper or admin interface) to DB Schema
       const dbRow = {
