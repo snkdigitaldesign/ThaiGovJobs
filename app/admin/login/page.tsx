@@ -103,7 +103,7 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.06),transparent)] pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(14,116,144,0.06),transparent)] pointer-events-none"></div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">
         <Link href="/" className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-800 transition text-sm font-medium mb-8">
@@ -113,7 +113,7 @@ export default function AdminLoginPage() {
 
         <div className="flex items-center justify-center gap-2.5 mb-2">
           <div className="p-2.5 bg-slate-900 text-white rounded-xl shadow-md">
-            <Shield size={22} className="text-emerald-400" />
+            <Shield size={22} className="text-blue-500" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">เฉพาะผู้ดูแลระบบ</h2>
         </div>
@@ -121,15 +121,7 @@ export default function AdminLoginPage() {
           ADMINISTRATIVE CONTROL PORTAL
         </p>
 
-        {/* Informative credentials instruction */}
-        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 mb-4 text-xs text-emerald-900 leading-relaxed max-w-sm sm:max-w-md mx-auto">
-          <p className="font-bold mb-1.5 text-emerald-800 flex items-center gap-1">💡 ข้อมูลสำหรับเข้าสู่ระบบแอดมินจำลอง:</p>
-          <p className="mb-2 text-emerald-700 font-medium">แอดมินจำลองเข้าใช้งานได้ทันที (ไม่ต้องมีเน็ตก็เข้าได้):</p>
-          <div className="bg-white/80 p-3 rounded-xl border border-emerald-200/50 space-y-1 font-mono text-[11px] mb-2 text-slate-700 shadow-xs">
-            <div><span className="font-bold">Email:</span> {process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@example.com'}</div>
-            <div><span className="font-bold">Password:</span> admin123456</div>
-          </div>
-        </div>
+
 
         {/* Dynamic Database & Supabase Diagnostics Panel */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-5 mb-6 text-xs text-slate-800 max-w-sm sm:max-w-md mx-auto shadow-sm">
@@ -159,7 +151,7 @@ export default function AdminLoginPage() {
               {/* Stat 1: Environment Variables */}
               <div className="flex items-start gap-2.5">
                 {dbStatus.env?.hasUrl && dbStatus.env?.hasAnonKey ? (
-                  <CheckCircle size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                  <CheckCircle size={16} className="text-blue-500 shrink-0 mt-0.5" />
                 ) : (
                   <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
                 )}
@@ -178,7 +170,7 @@ export default function AdminLoginPage() {
               {/* Stat 2: Connection Status */}
               <div className="flex items-start gap-2.5">
                 {dbStatus.connection?.ok ? (
-                  <CheckCircle size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                  <CheckCircle size={16} className="text-blue-500 shrink-0 mt-0.5" />
                 ) : (
                   <XCircle size={16} className="text-rose-500 shrink-0 mt-0.5" />
                 )}
@@ -186,7 +178,7 @@ export default function AdminLoginPage() {
                   <p className="font-bold text-slate-900">2. การทดสอบเชื่อมต่อ (Network & Keys Connection)</p>
                   <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
                     {dbStatus.connection?.ok ? (
-                      <span className="text-emerald-700 font-medium">เชื่อมต่อกับเครือข่าย Supabase สำเร็จ!</span>
+                      <span className="text-blue-700 font-medium">เชื่อมต่อกับเครือข่าย Supabase สำเร็จ!</span>
                     ) : (
                       <span className="text-rose-700 font-medium">
                         {dbStatus.connection?.error || 'ไม่มีการระบุตัวแปรเพื่อทดสอบเชื่อมต่อ API Key'}
@@ -199,7 +191,7 @@ export default function AdminLoginPage() {
               {/* Stat 3: Jobs Table Schema */}
               <div className="flex items-start gap-2.5">
                 {dbStatus.schema?.jobsTableExists ? (
-                  <CheckCircle size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                  <CheckCircle size={16} className="text-blue-500 shrink-0 mt-0.5" />
                 ) : (
                   <XCircle size={16} className="text-rose-500 shrink-0 mt-0.5" />
                 )}
@@ -207,7 +199,7 @@ export default function AdminLoginPage() {
                   <p className="font-bold text-slate-900">3. โครงสร้างตารางประกาศงาน (public.jobs Table)</p>
                   <p className="text-[11px] text-slate-500 leading-snug mt-0.5">
                     {dbStatus.schema?.jobsTableExists ? (
-                      <span className="text-emerald-700 font-medium">พบตาราง &quot;jobs&quot; ในระบบพร้อมใช้งาน</span>
+                      <span className="text-blue-700 font-medium">พบตาราง &quot;jobs&quot; ในระบบพร้อมใช้งาน</span>
                     ) : (
                       <span className="text-rose-700 font-medium">
                         {dbStatus.schema?.error || 'ไม่พบโครงสร้างตารางข้อมูลประกาศสอบงานในบัญชีของคุณ'}
@@ -257,7 +249,7 @@ export default function AdminLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@example.com"
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-2xl placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm transition-all bg-slate-50/50"
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-2xl placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm transition-all bg-slate-50/50"
                   disabled={loading}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -280,7 +272,7 @@ export default function AdminLoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-2xl placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm transition-all bg-slate-50/50"
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-2xl placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm transition-all bg-slate-50/50"
                   disabled={loading}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -328,12 +320,12 @@ export default function AdminLoginPage() {
                       <div className="flex gap-2 text-[11px]">
                         <span className="font-bold text-indigo-700 font-mono shrink-0">2.</span>
                         <div>
-                          <span className="font-bold text-indigo-900">การแก้ไขรหัสผ่านใน Supabase Dashboard (ง่ายที่สุด):</span>
+                          <span className="font-bold text-indigo-900">การแก้ไขรหัสผ่าน in Supabase Dashboard (ง่ายที่สุด):</span>
                           <ul className="list-disc list-inside mt-1 text-slate-600 space-y-1 text-[10.5px] pl-1">
                             <li>ในหน้าจอกล่องรายชื่อ Users ของคุณ (ตามรูปที่แคป)</li>
                             <li>คลิกปุ่มจุดสามจุด <span className="font-mono font-bold text-slate-800">...</span> หลังไอดี <span className="font-semibold text-indigo-950">snkdigitaldesign@gmail.com</span></li>
                             <li>เลือกหัวข้อ <span className="font-semibold text-indigo-600 bg-indigo-50 px-1 rounded">Reset password</span> เพื่อตั้งรหัสผ่านใหม่ที่จำง่ายยิ่งขึ้น</li>
-                            <li>หรือกด <span className="font-semibold text-rose-600 bg-rose-50 px-1.5 rounded">Delete User (ลบผู้ใช้เดิม)</span> แล้วกด <span className="font-semibold text-emerald-700 bg-emerald-50 px-1.5 rounded">Add user &gt; Create user</span> อีกครั้ง และกำหนดรหัสผ่านใหม่ให้ชัดเจน</li>
+                            <li>หรือกด <span className="font-semibold text-rose-600 bg-rose-50 px-1.5 rounded">Delete User (ลบผู้ใช้เดิม)</span> แล้วกด <span className="font-semibold text-blue-700 bg-blue-50 px-1.5 rounded">Add user &gt; Create user</span> อีกครั้ง และกำหนดรหัสผ่านใหม่ให้ชัดเจน</li>
                           </ul>
                         </div>
                       </div>
@@ -360,7 +352,7 @@ export default function AdminLoginPage() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="animate-spin text-emerald-400 mr-2" size={16} />
+                    <Loader2 className="animate-spin text-blue-300 mr-2" size={16} />
                     กำลังตรวจสอบข้อมูล...
                   </>
                 ) : (
