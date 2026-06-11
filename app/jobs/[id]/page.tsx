@@ -61,7 +61,7 @@ function formatThaiDate(dateString: string): string {
 }
 
 // Fetch single job details from Supabase or memory store
-async function getJobById(id: string): Promise<JobItem | undefined> {
+async function getJobById(id: string, incrementViews: boolean = false): Promise<JobItem | undefined> {
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
   if (isUuid) {
@@ -73,15 +73,27 @@ async function getJobById(id: string): Promise<JobItem | undefined> {
         .eq('id', id)
         .single();
 
-      if (!error && data) {
-        const nextViews = (data.views || 0) + 1;
-        try {
-          await supabase
-            .from('jobs')
-            .update({ views: nextViews })
-            .eq('id', id);
-        } catch (updateErr) {
-          console.error("Failed to increment views on server render:", updateErr);
+      if (error) {
+        console.error("Supabase select query failed or was interrupted:", error);
+        throw error;
+      }
+
+      if (data) {
+        let finalViews = data.views || 0;
+        if (incrementViews) {
+          finalViews += 1;
+          try {
+            const { error: updateError } = await supabase
+              .from('jobs')
+              .update({ views: finalViews })
+              .eq('id', id);
+            
+            if (updateError) {
+              console.error("Supabase update query failed:", updateError);
+            }
+          } catch (updateErr) {
+            console.error("Failed to increment views on database table write:", updateErr);
+          }
         }
 
         return {
@@ -102,11 +114,11 @@ async function getJobById(id: string): Promise<JobItem | undefined> {
           category: data.category,
           logo_url: data.logo_url || undefined,
           pdf_url: data.pdf_url || undefined,
-          views: nextViews
+          views: finalViews
         };
       }
     } catch (e) {
-      console.warn('getJobById: Supabase failed, using memory fallback');
+      console.warn('getJobById: Supabase connection failed or timed out, gracefully falling back to memory store:', e);
     }
   }
 
@@ -114,14 +126,16 @@ async function getJobById(id: string): Promise<JobItem | undefined> {
   const store = (globalThis as any).jobsStore || [];
   const found = store.find((j: any) => j.id === id);
   if (found) {
-    found.views = (found.views || 0) + 1;
+    if (incrementViews) {
+      found.views = (found.views || 0) + 1;
+    }
     return {
       ...found,
       application_end_date: found.application_end_date || undefined,
       source_url: found.officialUrl || undefined,
       logo_url: found.logo_url || undefined,
       pdf_url: found.pdf_url || undefined,
-      views: found.views
+      views: found.views || 1
     };
   }
   return undefined;
@@ -181,7 +195,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function JobDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const job = await getJobById(id);
+  const job = await getJobById(id, true);
 
   if (!job) {
     return (
