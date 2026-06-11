@@ -17,10 +17,12 @@ import {
   ChevronLeft,
   XCircle,
   Share2,
-  FileDown
+  FileDown,
+  Eye
 } from 'lucide-react';
 import ShareButtons from './ShareButtons';
 import { getSupabase } from '@/lib/supabase';
+import { getCountdownText } from '@/lib/utils';
 
 export interface JobItem {
   id: string;
@@ -33,6 +35,7 @@ export interface JobItem {
   description: string;
   officialUrl: string;
   isQuickScrape?: boolean;
+  views?: number;
 
   // Additional metadata payload
   application_end_date?: string;
@@ -71,6 +74,16 @@ async function getJobById(id: string): Promise<JobItem | undefined> {
         .single();
 
       if (!error && data) {
+        const nextViews = (data.views || 0) + 1;
+        try {
+          await supabase
+            .from('jobs')
+            .update({ views: nextViews })
+            .eq('id', id);
+        } catch (updateErr) {
+          console.error("Failed to increment views on server render:", updateErr);
+        }
+
         return {
           id: data.id,
           title: data.title,
@@ -88,7 +101,8 @@ async function getJobById(id: string): Promise<JobItem | undefined> {
           source_url: data.source_url,
           category: data.category,
           logo_url: data.logo_url || undefined,
-          pdf_url: data.pdf_url || undefined
+          pdf_url: data.pdf_url || undefined,
+          views: nextViews
         };
       }
     } catch (e) {
@@ -100,12 +114,14 @@ async function getJobById(id: string): Promise<JobItem | undefined> {
   const store = (globalThis as any).jobsStore || [];
   const found = store.find((j: any) => j.id === id);
   if (found) {
+    found.views = (found.views || 0) + 1;
     return {
       ...found,
       application_end_date: found.application_end_date || undefined,
       source_url: found.officialUrl || undefined,
       logo_url: found.logo_url || undefined,
-      pdf_url: found.pdf_url || undefined
+      pdf_url: found.pdf_url || undefined,
+      views: found.views
     };
   }
   return undefined;
@@ -200,8 +216,10 @@ export default async function JobDetailPage({ params }: PageProps) {
     }
   }
 
+  const countdown = getCountdownText(job.application_end_date);
+
   return (
-    <main className="min-h-screen bg-[#fafbfc] py-12 px-4 md:px-8 selection:bg-emerald-500 selection:text-white">
+    <main className="min-h-screen bg-[#fafbfc] py-12 px-4 md:px-8 selection:bg-blue-600 selection:text-white font-sans">
       <div className="max-w-4xl mx-auto space-y-6">
         
         {/* Navigation Breadcrumb / Top Bar */}
@@ -245,7 +263,7 @@ export default async function JobDetailPage({ params }: PageProps) {
           
           {/* Main Cover Header */}
           <div className="p-6 md:p-8 bg-slate-950 text-white relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.1),transparent)] pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(19,112,176,0.15),transparent)] pointer-events-none"></div>
             
             <div className="relative z-10 flex flex-col md:flex-row gap-6 items-start">
               {job.logo_url && (
@@ -253,24 +271,23 @@ export default async function JobDetailPage({ params }: PageProps) {
                 <img
                   src={job.logo_url}
                   alt={job.department}
-                  className="w-16 h-16 md:w-20 md:h-20 object-contain bg-white rounded-2xl p-2 border border-slate-800 shrink-0 shadow-lg"
+                  className="w-20 h-20 md:w-28 md:h-28 object-contain bg-white rounded-2xl md:rounded-3xl p-2.5 md:p-3.5 border border-slate-800 shrink-0 shadow-xl"
                 />
               )}
               <div className="space-y-4 flex-1">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/10 text-[10px] font-extrabold uppercase">
+                  <span className="px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/10 text-[10px] font-extrabold uppercase">
                     {job.category || 'ข้าราชการ'}
                   </span>
                   
-                  {isExpired ? (
-                    <span className="text-rose-400 text-[10px] font-extrabold flex items-center gap-1 bg-rose-400/10 px-2 py-0.5 rounded-md">
-                      • สิ้นสุดระยะเวลา
-                    </span>
-                  ) : (
-                    <span className="text-emerald-400 text-[10px] font-extrabold flex items-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-md">
-                      • กำลังรับสมัคร
-                    </span>
-                  )}
+                  <span className={`text-[10px] px-2.5 py-0.5 rounded-md border font-extrabold flex items-center gap-1 ${countdown.className}`}>
+                    {countdown.text}
+                  </span>
+
+                  <span className="text-slate-350 text-[10.5px] font-medium flex items-center gap-1 bg-slate-900 border border-slate-800/85 px-2.5 py-0.5 rounded-md hover:text-slate-200 transition-colors">
+                    <Eye size={12} className="text-slate-400 shrink-0" />
+                    <span>👁️ ผู้เข้าชม {job.views || 1} ครั้ง</span>
+                  </span>
                 </div>
 
                 <h1 className="text-lg md:text-2xl font-extrabold leading-snug text-white">
@@ -295,7 +312,7 @@ export default async function JobDetailPage({ params }: PageProps) {
               
               {/* Salary bento bar */}
               <div className="p-4 rounded-xl bg-white border border-slate-100 flex items-start gap-3 shadow-xs">
-                <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 shrink-0">
+                <div className="p-2 rounded-lg bg-blue-50 text-blue-600 shrink-0">
                   <CircleDollarSign size={16} />
                 </div>
                 <div>
@@ -306,7 +323,7 @@ export default async function JobDetailPage({ params }: PageProps) {
 
               {/* Education Level criteria */}
               <div className="p-4 rounded-xl bg-white border border-slate-100 flex items-start gap-3 shadow-xs">
-                <div className="p-2 rounded-lg bg-teal-50 text-teal-600 shrink-0">
+                <div className="p-2 rounded-lg bg-sky-50 text-sky-600 shrink-0">
                   <GraduationCap size={16} />
                 </div>
                 <div>
@@ -319,7 +336,7 @@ export default async function JobDetailPage({ params }: PageProps) {
 
               {/* Calendar Registration period */}
               <div className="p-4 rounded-xl bg-white border border-slate-100 flex items-start gap-3 shadow-xs sm:col-span-2 lg:col-span-1">
-                <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600 shrink-0">
+                <div className="p-2 rounded-lg bg-[#f0f7ff] text-blue-600 shrink-0">
                   <Calendar size={16} />
                 </div>
                 <div>
@@ -382,7 +399,7 @@ export default async function JobDetailPage({ params }: PageProps) {
                     href={job.officialUrl || job.source_url || 'https://www.gprocurement.go.th'}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-emerald-600 text-sm font-extrabold text-white hover:bg-emerald-700 transition shadow-md hover:shadow-lg active:scale-95 duration-100 shrink-0"
+                    className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-blue-600 text-sm font-extrabold text-white hover:bg-blue-700 transition shadow-md hover:shadow-lg active:scale-95 duration-100 shrink-0"
                   >
                     <Globe size={16} />
                     <span>ไปยังเว็บไซต์สมัครงาน</span>

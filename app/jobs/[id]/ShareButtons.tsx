@@ -65,7 +65,7 @@ export default function ShareButtons({ jobId, jobTitle, jobDept }: ShareButtonsP
       >
         {copied ? (
           <>
-            <span className="text-emerald-500 font-medium">คัดลอกแล้ว!</span>
+            <span className="text-blue-600 font-medium">คัดลอกแล้ว!</span>
           </>
         ) : (
           <>
