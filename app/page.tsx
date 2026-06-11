@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Logo from '@/components/Logo';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
+import { getCountdownText } from '@/lib/utils';
 import {
   Search,
   Filter,
@@ -20,7 +22,13 @@ import {
   X,
   RefreshCw,
   Lock,
-  ChevronRight
+  ChevronRight,
+  Award,
+  CheckCircle2,
+  HelpCircle,
+  Clock,
+  BriefcaseBusiness,
+  Eye
 } from 'lucide-react';
 
 export interface JobItem {
@@ -35,6 +43,7 @@ export interface JobItem {
   officialUrl: string;
   isQuickScrape?: boolean;
   createdAt: string;
+  views?: number;
 
   category?: string;
   education_level?: string;
@@ -43,6 +52,62 @@ export interface JobItem {
   application_end_date?: string;
   logo_url?: string;
   pdf_url?: string;
+}
+
+function checkIfRequiresPartA(job: JobItem): boolean {
+  const text = (
+    (job.title || '') + ' ' + 
+    (job.requirements || '') + ' ' + 
+    (job.description || '')
+  ).toLowerCase();
+  
+  if (
+    text.includes('ไม่ต้องผ่าน ภาค ก') ||
+    text.includes('ไม่ต้องผ่านภาค ก') ||
+    text.includes('ไม่ต้องมีภาค ก') ||
+    text.includes('ไม่ต้องมี ภาค ก') ||
+    text.includes('ไม่ต้องใช้ ภาค ก') ||
+    text.includes('ไม่ต้องใช้ภาค ก') ||
+    text.includes('ยกเว้น ภาค ก') ||
+    text.includes('ยกเว้นภาค ก') ||
+    text.includes('ไม่ต้องสอบผ่านภาค ก') ||
+    text.includes('ไม่ต้องสอบผ่าน ภาค ก')
+  ) {
+    return false;
+  }
+  
+  if (
+    text.includes('ผ่านการวัดความรู้ความสามารถทั่วไป') ||
+    text.includes('ผ่าน ภาค ก') ||
+    text.includes('ผ่านภาค ก') ||
+    text.includes('ต้องผ่านภาค ก') ||
+    text.includes('ต้องผ่าน ภาค ก') ||
+    text.includes('ต้องสอบผ่าน ภาค ก') ||
+    text.includes('ก.พ. ภาค ก') ||
+    text.includes('ภาค ก. ของ') ||
+    text.includes('ภาค ก ของ')
+  ) {
+    return true;
+  }
+  
+  if (job.category === 'ข้าราชการ') {
+    return true;
+  }
+  
+  return false;
+}
+
+function isRecentJob(createdAtString: string): boolean {
+  if (!createdAtString) return false;
+  try {
+    const createdDate = new Date(createdAtString);
+    const now = new Date();
+    // 7 days in milliseconds
+    const oneWeek = 7 * 24 * 60 * 60 * 1000;
+    return (now.getTime() - createdDate.getTime()) < oneWeek;
+  } catch (e) {
+    return false;
+  }
 }
 
 export default function Home() {
@@ -54,6 +119,9 @@ export default function Home() {
   // Selected Filters
   const [selectedEducation, setSelectedEducation] = useState('ทั้งหมด');
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
+  const [selectedRegion, setSelectedRegion] = useState('ทั้งหมด');
+  const [selectedPartA, setSelectedPartA] = useState<'all' | 'requires' | 'exempt'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'agency' | 'latest' | 'requires_part_a' | 'no_part_a'>('all');
 
   // List of distinct filter options
   const educationOptions = [
@@ -150,77 +218,153 @@ export default function Home() {
       job.title.toLowerCase().includes(normalizedQuery) ||
       job.department.toLowerCase().includes(normalizedQuery) ||
       (job.requirements && job.requirements.toLowerCase().includes(normalizedQuery)) ||
-      (job.description && job.description.toLowerCase().includes(normalizedQuery));
+      (job.description && job.description.toLowerCase().includes(normalizedQuery)) ||
+      (job.region && job.region.toLowerCase().includes(normalizedQuery));
 
     // 2. Education filter comparison
-    // Matches if education level represents the selected tag OR listed in requirement string
-    const matchesEducation = selectedEducation === 'ทั้งหมด' ||
-      (job.education_level && job.education_level.includes(selectedEducation)) ||
-      (job.requirements && job.requirements.includes(selectedEducation)) ||
-      (selectedEducation === 'ปวช. / ปวส.' && job.requirements?.includes('ปวช')) ||
-      (selectedEducation === 'ไม่จำกัดวุฒิ' && (job.education_level === 'ไม่จำกัดวุฒิ' || job.education_level?.includes('ไม่จำกัด')));
+    let matchesEducation = true;
+    if (selectedEducation !== 'ทั้งหมด') {
+      if (selectedEducation === 'ปวช. / ปวส.') {
+        matchesEducation = !!(job.education_level && (job.education_level.includes('ปวช') || job.education_level.includes('ปวส'))) || 
+                           !!(job.requirements && (job.requirements.includes('ปวช') || job.requirements.includes('ปวส')));
+      } else if (selectedEducation === 'ปวช.') {
+        matchesEducation = !!(job.education_level && job.education_level.includes('ปวช')) || !!(job.requirements && job.requirements.includes('ปวช'));
+      } else if (selectedEducation === 'ปวส.') {
+        matchesEducation = !!(job.education_level && job.education_level.includes('ปวส')) || !!(job.requirements && job.requirements.includes('ปวส'));
+      } else if (selectedEducation === 'ปริญญาตรี') {
+        matchesEducation = !!(job.education_level && job.education_level.includes('ปริญญาตรี')) || !!(job.requirements && job.requirements.includes('ปริญญาตรี'));
+      } else if (selectedEducation === 'ปริญญาโท') {
+        matchesEducation = !!(job.education_level && job.education_level.includes('ปริญญาโท')) || !!(job.requirements && job.requirements.includes('ปริญญาโท'));
+      } else if (selectedEducation === 'ปริญญาเอก') {
+        matchesEducation = !!(job.education_level && job.education_level.includes('ปริญญาเอก')) || !!(job.requirements && job.requirements.includes('ปริญญาเอก'));
+      } else if (selectedEducation === 'ไม่จำกัดวุฒิ') {
+        matchesEducation = !job.education_level || job.education_level === 'ไม่จำกัดวุฒิ' || job.education_level.includes('ไม่จำกัด') || !!(job.requirements && job.requirements.includes('ไม่จำกัด'));
+      } else {
+        matchesEducation = !!(job.education_level && job.education_level.includes(selectedEducation)) || !!(job.requirements && job.requirements.includes(selectedEducation));
+      }
+    }
 
     // 3. Category filter comparison
     const matchesCategory = selectedCategory === 'ทั้งหมด' ||
       (job.category && job.category === selectedCategory) ||
       (job.requirements && job.requirements.includes(selectedCategory));
 
-    return matchesSearch && matchesEducation && matchesCategory;
+    // 4. Region filter comparison
+    const matchesRegion = selectedRegion === 'ทั้งหมด' ||
+      (job.region && job.region === selectedRegion);
+
+    // 5. Part A (ก.พ.) filter comparison
+    const isPartARequired = checkIfRequiresPartA(job);
+    let matchesPartA = true;
+    if (selectedPartA === 'requires') {
+      matchesPartA = isPartARequired;
+    } else if (selectedPartA === 'exempt') {
+      matchesPartA = !isPartARequired;
+    }
+
+    return matchesSearch && matchesEducation && matchesCategory && matchesRegion && matchesPartA;
+  });
+
+  // Sort display list (Always sort descending by default, especially relevant for 'latest')
+  const displayJobs = [...filteredJobs].sort((a, b) => {
+    try {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA;
+    } catch (e) {
+      return 0;
+    }
   });
 
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedEducation('ทั้งหมด');
     setSelectedCategory('ทั้งหมด');
+    setSelectedRegion('ทั้งหมด');
+    setSelectedPartA('all');
+    setActiveTab('all');
   };
 
+  // Get distinct regions dynamically
+  const distinctRegions = Array.from(
+    new Set(activeJobs.map(j => j.region || 'ทั่วประเทศ'))
+  ).filter(Boolean);
+
+  // Dynamic calculations for agencies based on active jobs list
+  const departmentsWithCount = Array.from(new Set(activeJobs.map(j => j.department))).map(dept => {
+    return {
+      name: dept,
+      count: activeJobs.filter(j => j.department === dept).length
+    };
+  }).sort((a, b) => b.count - a.count);
+
   return (
-    <div className="min-h-screen bg-[#fafbfc] text-slate-800 font-sans selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen bg-[#fafbfc] text-slate-800 font-sans selection:bg-blue-600 selection:text-white">
       
-      {/* 1. Header Bar */}
+      {/* 1. Header Bar with Category Navigation links */}
       <header className="bg-white border-b border-slate-100 sticky top-0 z-40 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.02)] backdrop-blur-md bg-white/95">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 md:py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           
-          {/* Logo Brand */}
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-tr from-emerald-600 to-teal-500 text-white rounded-xl shadow-md shadow-emerald-500/10">
-              <Sparkles size={20} className="animate-pulse" />
-            </div>
-            <div>
-              <h1 id="brand-logo" className="text-base md:text-lg font-bold tracking-tight text-slate-900 flex items-center gap-2">
-                หางานราชการง่ายๆ
-              </h1>
-              <p className="text-[10px] text-slate-400 font-mono tracking-wider uppercase">ACTIVE OFFICIAL TELEPORT</p>
+          {/* Logo Brand using the beautiful JobGovEasy component */}
+          <div className="flex items-center gap-3 justify-between">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={handleResetFilters}>
+              <Logo size={46} />
             </div>
           </div>
+
+          {/* Main Menu Links Navigation row */}
+          <nav className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 max-w-full -mx-4 px-4 lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden scrollbar-none">
+            {[
+              { id: 'all', label: 'หน้าหลัก', action: () => { handleResetFilters(); } },
+              { id: 'agency', label: 'แยกตามหน่วยงาน', action: () => { setActiveTab('agency'); setTimeout(() => document.getElementById('filters-container')?.scrollIntoView({ behavior: 'smooth' }), 100); } },
+              { id: 'latest', label: 'ล่าสุด', action: () => { setActiveTab('latest'); setSelectedPartA('all'); } },
+              { id: 'requires_part_a', label: 'ต้องผ่าน ภาค ก', action: () => { setActiveTab('requires_part_a'); setSelectedPartA('requires'); } },
+              { id: 'no_part_a', label: 'ไม่ต้องผ่าน ภาค ก', action: () => { setActiveTab('no_part_a'); setSelectedPartA('exempt'); } }
+            ].map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={item.action}
+                  className={`text-xs px-3.5 py-2 rounded-xl font-bold whitespace-nowrap transition cursor-pointer ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700 shadow-xs border border-blue-100/50'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </nav>
 
           {/* Secure Admin Portal Link */}
           <button
             id="btn-staff-portal"
             onClick={() => router.push('/admin/dashboard')}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-950 hover:bg-slate-50 rounded-xl transition border border-slate-100 hover:border-slate-200"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-950 hover:bg-slate-50 rounded-xl transition border border-slate-100 hover:border-slate-200 self-end lg:self-auto"
           >
-            <Lock size={12} className="text-emerald-500" />
+            <Lock size={12} className="text-blue-500" />
             <span>เข้าสู่ระบบเจ้าหน้าที่</span>
           </button>
         </div>
       </header>
-
+      
       {/* 2. Hero Section */}
       <section className="bg-slate-950 text-white py-16 md:py-20 relative overflow-hidden">
         {/* Abstract decorative elements */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.12),transparent)] pointer-events-none"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(19,112,176,0.15),transparent)] pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#fafbfc] to-transparent pointer-events-none"></div>
 
         <div className="max-w-4xl mx-auto px-4 text-center relative z-10 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/10">
             <TrendingUp size={12} fill="currentColor" />
             <span>อัปเดตงานสอบแบบเรียลไทม์ ตรวจสอบความถูกต้องอัตโนมัติ</span>
           </div>
 
-          <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+          <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-white leading-tight font-sans">
             ศูนย์รวมประกาศสมัครงานราชการ <br />
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">ที่ยังไม่หมดเขตรับสมัคร</span> 🇹🇭
+            <span className="bg-gradient-to-r from-blue-400 to-sky-300 bg-clip-text text-transparent">ที่ยังไม่หมดเขตรับสมัคร</span> 🇹🇭
           </h2>
 
           <p className="text-xs md:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
@@ -236,18 +380,18 @@ export default function Home() {
         {/* Dynamic Status Counter and Screening Warning Banner */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_4px_25px_rgba(0,0,0,0.02)] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
               <Calendar size={18} />
             </div>
             <div>
               <h3 className="text-xs font-bold text-slate-700">ระบบปกป้องข้อมูลหมดอายุทำงานอยู่</h3>
               <p className="text-[10px] text-slate-400 font-sans">
-                คัดกรองเฉพาะหัวข้อที่มีวันปิดรับสมัคร ตั้งแต่ <strong className="text-emerald-600 font-bold">{thaiDateInLocale || '...'}</strong> เป็นต้นไป เท่านั้น
+                คัดกรองเฉพาะหัวข้อที่มีวันปิดรับสมัคร ตั้งแต่ <strong className="text-blue-600 font-bold">{thaiDateInLocale || '...'}</strong> เป็นต้นไป เท่านั้น
               </p>
             </div>
           </div>
-          <div className="text-xs font-semibold bg-emerald-50 text-emerald-800 px-3 py-1.5 rounded-full w-fit">
-            พบงานเปิดรับสมัคร {filteredJobs.length} ตำแหน่ง
+          <div className="text-xs font-semibold bg-blue-50 text-blue-800 px-3 py-1.5 rounded-full w-fit">
+            พบงานเปิดรับสมัคร {displayJobs.length} ตำแหน่ง
           </div>
         </div>
 
@@ -256,13 +400,13 @@ export default function Home() {
           <div className="flex items-center justify-between border-b border-slate-50 pb-4 flex-wrap gap-2">
             <h3 className="font-bold text-slate-900 text-sm md:text-base flex items-center gap-2">
               <Filter size={16} className="text-slate-400" />
-              กล่องคัดกรองตำแหน่งงานสอบราชการ
+              ระบบสอบหาและคัดกรองงานราชการอัจฉริยะ (Search & Filter)
             </h3>
-            {(selectedEducation !== 'ทั้งหมด' || selectedCategory !== 'ทั้งหมด' || searchQuery !== '') && (
+            {(selectedEducation !== 'ทั้งหมด' || selectedCategory !== 'ทั้งหมด' || searchQuery !== '' || selectedRegion !== 'ทั้งหมด' || selectedPartA !== 'all') && (
               <button
                 id="btn-reset-filters"
                 onClick={handleResetFilters}
-                className="text-xs font-bold text-slate-500 hover:text-emerald-600 flex items-center gap-1 transition"
+                className="text-xs font-bold text-slate-500 hover:text-blue-600 flex items-center gap-1 transition cursor-pointer"
               >
                 <X size={14} />
                 ล้างตัวกรองทั้งหมด
@@ -284,28 +428,29 @@ export default function Home() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="เช่น กรมสรรพากร, บัญชี, ปวช..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-xs transition placeholder:text-slate-400 bg-slate-50/20"
+                  placeholder="เช่น กรมสรรพากร, บัญชี, วิศวกร..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-xs transition placeholder:text-slate-400 bg-slate-50/20"
                 />
               </div>
             </div>
 
-            {/* 2. Education level selector */}
+            {/* 2. Region / Province selector */}
             <div className="space-y-2">
-              <label htmlFor="education-select" className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-                วุฒิการศึกษาที่สมัครสอบ
+              <label htmlFor="region-select" className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                จังหวัด/สถานที่ปฏิบัติงาน
               </label>
               <div className="relative">
-                <GraduationCap size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <MapPin size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <select
-                  id="education-select"
-                  value={selectedEducation}
-                  onChange={(e) => setSelectedEducation(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-xs bg-white text-slate-700 font-medium"
+                  id="region-select"
+                  value={selectedRegion}
+                  onChange={(e) => setSelectedRegion(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-xs bg-white text-slate-700 font-medium"
                 >
-                  {educationOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt === 'ทั้งหมด' ? 'วุฒิการศึกษาทั้งหมด' : opt}
+                  <option value="ทั้งหมด">จังหวัด/สถานที่ปฏิบัติงานทั้งหมด</option>
+                  {distinctRegions.map((region) => (
+                    <option key={region} value={region}>
+                      {region}
                     </option>
                   ))}
                 </select>
@@ -323,7 +468,7 @@ export default function Home() {
                   id="category-select"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-xs bg-white text-slate-700 font-medium"
+                  className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-xs bg-white text-slate-700 font-medium"
                 >
                   {categoryOptions.map((opt) => (
                     <option key={opt} value={opt}>
@@ -335,24 +480,141 @@ export default function Home() {
             </div>
 
           </div>
+
+          {/* New row for Education Pill Selection & OCSC Part A Choice */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+            
+            {/* OCSC Part A (ก.พ.) 3-way toggle switch */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                เงื่อนไขการทดสอบ ภาค ก (ก.พ.)
+              </label>
+              <div className="grid grid-cols-3 gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
+                {[
+                  { id: 'all', label: 'ทั้งหมด' },
+                  { id: 'exempt', label: 'ไม่ต้องผ่าน ภาค ก' },
+                  { id: 'requires', label: 'ต้องผ่าน ภาค ก' }
+                ].map((opt) => {
+                  const isSelected = selectedPartA === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        setSelectedPartA(opt.id as any);
+                        if (opt.id === 'all') {
+                          if (activeTab === 'requires_part_a' || activeTab === 'no_part_a') {
+                            setActiveTab('all');
+                          }
+                        } else if (opt.id === 'requires') {
+                          setActiveTab('requires_part_a');
+                        } else {
+                          setActiveTab('no_part_a');
+                        }
+                      }}
+                      className={`py-2 rounded-xl text-xs font-bold text-center cursor-pointer transition ${
+                        isSelected
+                          ? 'bg-blue-600 text-white shadow-xs border border-blue-500'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Clickable Education Selection pills */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider">
+                แยกตามวุฒิการศึกษา (ปวช./ปวส./ปริญญาตรี)
+              </label>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {['ทั้งหมด', 'ปวช. / ปวส.', 'ปวช.', 'ปวส.', 'ปริญญาตรี', 'ปริญญาโท', 'ไม่จำกัดวุฒิ'].map((edu) => {
+                  const isSelected = selectedEducation === edu;
+                  return (
+                    <button
+                      key={edu}
+                      onClick={() => setSelectedEducation(edu)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold cursor-pointer transition ${
+                        isSelected
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-100'
+                      }`}
+                    >
+                      {edu === 'ทั้งหมด' ? 'วุฒิทั้งหมด' : edu}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
         </section>
+
+        {/* Dynamic Agency Grid Panel when activeTab is "agency" */}
+        {activeTab === 'agency' && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-3xl border border-slate-100 p-6 shadow-[0_10px_35px_rgba(0,0,0,0.015)] space-y-4"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h4 className="text-xs font-bold text-slate-700 tracking-wider uppercase flex items-center gap-2">
+                <Building2 size={14} className="text-blue-600" />
+                แยกตามหน่วยงานที่เปิดสอบ ({departmentsWithCount.length} หน่วยงาน)
+              </h4>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="text-[10px] font-bold text-slate-400 hover:text-blue-600 transition"
+                >
+                  ล้างการเลือก
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
+              {departmentsWithCount.map((dept) => {
+                const isSelected = searchQuery.toLowerCase() === dept.name.toLowerCase();
+                return (
+                  <button
+                    key={dept.name}
+                    onClick={() => setSearchQuery(isSelected ? '' : dept.name)}
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition ${
+                      isSelected
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-100'
+                    }`}
+                  >
+                    <span>{dept.name}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
+                      isSelected ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-500'
+                    }`}>
+                      {dept.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
 
         {/* 4. Filtered Results Display Grid */}
         <section className="space-y-6">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
             <h3 className="font-bold text-slate-800 text-sm md:text-base">
-              รายการสอบสมัครงานราชการเปิดรับสมัครอยู่ ({filteredJobs.length} ตำแหน่ง)
+              รายการสอบสมัครงานราชการเปิดรับสมัครอยู่ ({displayJobs.length} ตำแหน่ง)
             </h3>
           </div>
 
           <AnimatePresence mode="popLayout">
             {loading ? (
               <div id="loading-block" className="py-24 text-center bg-white rounded-3xl border border-slate-100 shadow-xs">
-                <RefreshCw size={36} className="animate-spin mx-auto text-emerald-600 mb-4" />
+                <RefreshCw size={36} className="animate-spin mx-auto text-blue-600 mb-4" />
                 <p className="text-xs font-semibold text-slate-500">กำลังตรวจสอบสารบัตรรวมงานราชการด่วน...</p>
               </div>
-            ) : filteredJobs.length === 0 ? (
+            ) : displayJobs.length === 0 ? (
               <motion.div
                 id="no-jobs-container"
                 initial={{ opacity: 0, y: 10 }}
@@ -373,8 +635,9 @@ export default function Home() {
                 </button>
               </motion.div>
             ) : (
-              <div id="jobs-grid" className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {filteredJobs.map((job, idx) => {
+              <div id="jobs-grid" className="flex flex-col gap-4">
+                {displayJobs.map((job, idx) => {
+                  const countdown = getCountdownText(job.application_end_date);
                   return (
                     <motion.div
                       key={job.id}
@@ -383,76 +646,87 @@ export default function Home() {
                       exit={{ opacity: 0, scale: 0.98 }}
                       transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 1.2) }}
                       onClick={() => router.push(`/jobs/${job.id}`)}
-                      className="bg-white border border-slate-100 hover:border-emerald-500/20 rounded-3xl p-6 transition-all duration-300 hover:shadow-[0_12px_30px_rgba(16,185,129,0.06)] flex flex-col justify-between group cursor-pointer relative overflow-hidden"
+                      className="bg-white border border-slate-100 hover:border-blue-500/20 rounded-3xl p-5 md:p-6 transition-all duration-300 hover:shadow-[0_12px_30px_rgba(19,112,176,0.06)] flex flex-col justify-between group cursor-pointer relative overflow-hidden pl-7 md:pl-8"
                     >
-                      {/* Accent color strip */}
-                      <div className="absolute top-0 left-0 right-0 h-[3px] bg-slate-100 group-hover:bg-gradient-to-r group-hover:from-emerald-500 group-hover:to-teal-500 transition-colors"></div>
+                      {/* Accent color left strip */}
+                      <div className="absolute top-0 bottom-0 left-0 w-[4px] bg-slate-100 group-hover:bg-gradient-to-b group-hover:from-blue-600 group-hover:to-sky-500 transition-all duration-300"></div>
 
-                      <div className="flex gap-4 items-start">
-                        {job.logo_url && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={job.logo_url}
-                            alt={job.department}
-                            className="w-12 h-12 md:w-14 md:h-14 object-contain bg-slate-50 p-1.5 rounded-xl border border-slate-100 shrink-0 self-start"
-                          />
-                        )}
-                        <div className="space-y-4 flex-1 min-w-0">
-                          {/* Upper Badges & Meta */}
-                          <div className="flex items-center justify-between flex-wrap gap-2">
-                            <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold tracking-tight border border-emerald-100/50">
-                              {job.category || job.requirements?.split('|')?.[2]?.replace('หมวดหมู่:', '')?.trim() || 'ข้าราชการ'}
-                            </span>
-                            
-                            <span className="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                              มีผลสมัครได้อยู่
-                            </span>
-                          </div>
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-8 w-full">
+                        {/* Left & Middle grouping */}
+                        <div className="flex flex-col sm:flex-row items-start gap-4 flex-1 min-w-0">
+                          {job.logo_url && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={job.logo_url}
+                              alt={job.department}
+                              className="w-16 h-16 md:w-[84px] md:h-[84px] object-contain bg-white p-2 md:p-2.5 rounded-2xl md:rounded-3xl border border-slate-200/90 shadow-sm shrink-0 self-start sm:self-center"
+                            />
+                          )}
+                          <div className="space-y-2 flex-1 min-w-0">
+                            {/* Badges & Meta */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 text-[10px] font-bold tracking-tight border border-blue-100/50">
+                                {job.category || job.requirements?.split('|')?.[2]?.replace('หมวดหมู่:', '')?.trim() || 'ข้าราชการ'}
+                              </span>
+                              
+                              {job.createdAt && isRecentJob(job.createdAt) && (
+                                <span className="px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-[9px] font-bold tracking-wide uppercase border border-orange-200 flex items-center gap-0.5">
+                                  <Sparkles size={10} className="text-orange-600 shrink-0" />
+                                  ล่าสุด
+                                </span>
+                              )}
+                              
+                              <span className={`px-2 py-0.5 rounded-md text-[9.5px] font-bold border flex items-center gap-1 leading-none ${countdown.className}`}>
+                                {countdown.text}
+                              </span>
 
-                          {/* Position job Title */}
-                          <h4 className="font-bold text-slate-800 group-hover:text-emerald-700 transition duration-150 text-sm md:text-base leading-snug line-clamp-2">
-                            {job.title}
-                          </h4>
-
-                          {/* Core Details Spec List */}
-                          <div className="space-y-2 text-xs text-slate-500">
-                            {/* Department info */}
-                            <div className="flex items-center gap-2.5">
-                              <Building2 size={14} className="text-slate-400 shrink-0" />
-                              <span className="font-semibold text-slate-700">{job.department}</span>
+                              <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1 bg-slate-50 border border-slate-100/70 px-2 py-0.5 rounded-md shrink-0 leading-none">
+                                <Eye size={12} className="text-slate-400 shrink-0" />
+                                <span>{job.views !== undefined ? job.views.toLocaleString() : '1'} ครั้ง</span>
+                              </span>
                             </div>
 
-                            {/* Period duration info */}
-                            <div className="flex items-center gap-2.5">
-                              <Calendar size={14} className="text-slate-400 shrink-0" />
-                              <span className="text-slate-600 line-clamp-1">{job.period}</span>
-                            </div>
+                            {/* Position job Title (No truncation now!) */}
+                            <h4 className="font-bold text-slate-800 group-hover:text-blue-700 transition duration-155 text-sm md:text-base leading-snug font-sans break-words whitespace-normal">
+                              {job.title}
+                            </h4>
 
-                            {/* Level criteria display */}
-                            <div className="flex items-start gap-2.5">
-                              <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold shrink-0 mt-0.5">
-                                วุฒิที่ระบุ
-                              </span>
-                              <span className="text-slate-500 line-clamp-1">
-                                {job.education_level || job.requirements?.split('|')?.[0]?.trim() || 'ปริญญาตรีขึ้นไป'}
-                              </span>
+                            {/* Core Details Spec List (Flex on desktop/screen size, clean flow) */}
+                            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-y-2 gap-x-4 text-xs text-slate-500 pt-1">
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Building2 size={13} className="text-slate-400 shrink-0" />
+                                <span className="font-semibold text-slate-705">{job.department}</span>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Calendar size={13} className="text-slate-400 shrink-0" />
+                                <span className="text-slate-600">{job.period}</span>
+                              </div>
+
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold shrink-0">
+                                  วุฒิที่ระบุ
+                                </span>
+                                <span className="text-slate-600 truncate">
+                                  {job.education_level || job.requirements?.split('|')?.[0]?.trim() || 'ปริญญาตรีขึ้นไป'}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Lower controls section */}
-                      <div className="pt-4 mt-6 border-t border-slate-50 flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-slate-700 text-xs font-semibold">
-                          <CircleDollarSign size={14} className="text-emerald-600 shrink-0" />
-                          <span className="text-slate-800">{job.salary}</span>
+                        {/* Right grouping - Salary and buttons. Divider Line on small resolution screens */}
+                        <div className="pt-4 md:pt-0 mt-2 md:mt-0 border-t md:border-t-0 border-slate-50 flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 shrink-0 w-full md:w-auto">
+                          <div className="flex items-center gap-1.5 text-slate-700 text-xs font-semibold">
+                            <CircleDollarSign size={15} className="text-blue-600 shrink-0" />
+                            <span className="text-slate-900 font-bold md:text-sm">{job.salary}</span>
+                          </div>
+
+                          <span className="text-blue-600 font-bold text-xs flex items-center gap-1 group-hover:translate-x-1.5 transition-all bg-blue-50/60 group-hover:bg-blue-50 px-4 py-2 rounded-xl">
+                            อ่านต่อและแชร์
+                            <ArrowRight size={14} />
+                          </span>
                         </div>
-
-                        <span className="text-emerald-600 font-bold text-xs flex items-center gap-1 group-hover:translate-x-1.5 transition-all">
-                          อ่านต่อและแชร์
-                          <ArrowRight size={14} />
-                        </span>
                       </div>
                     </motion.div>
                   );
@@ -465,10 +739,11 @@ export default function Home() {
       </main>
 
       {/* 5. Elegant Footer */}
-      <footer className="py-12 border-t border-slate-100 bg-white mt-24 text-center text-slate-400 text-xs">
-        <div className="max-w-4xl mx-auto px-4 space-y-2">
-          <p className="font-semibold text-slate-600">หางานราชการง่ายๆ • เว็บบอร์ดปฏิทินข่าวสารการสอบแข่งขัน</p>
-          <p className="text-[10px] font-mono">ALL DATA IS REAL-TIME AUTOMATICALLY VERIFIED & SECURED BY SUB-SYSTEMS</p>
+      <footer className="py-16 border-t border-slate-100 bg-white mt-24 text-center text-slate-400 text-xs shadow-[0_-2px_15px_-4px_rgba(0,0,0,0.015)]">
+        <div className="max-w-4xl mx-auto px-4 space-y-4 flex flex-col items-center">
+          <Logo size={40} showText={true} className="mb-2" />
+          <p className="font-semibold text-slate-600 font-sans">เว็บบอร์ดปฏิทินข่าวสารการสอบแข่งขัน เพื่อการเตรียมตัวสอบราชการอย่างง่ายดาย</p>
+          <p className="text-[10px] font-mono tracking-widest text-slate-400">ALL DATA SECURED & VERIFIED • JobGovEasy © 2026</p>
         </div>
       </footer>
 
