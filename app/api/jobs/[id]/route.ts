@@ -55,6 +55,16 @@ export async function GET(
           .single();
 
         if (!error && data) {
+          const nextViews = (data.views || 0) + 1;
+          try {
+            await supabase
+              .from('jobs')
+              .update({ views: nextViews })
+              .eq('id', id);
+            data.views = nextViews;
+          } catch (updateErr) {
+            console.error('Failed to increment views in DB:', updateErr);
+          }
           return NextResponse.json({ success: true, data });
         }
       }
@@ -67,6 +77,7 @@ export async function GET(
     const job = store.find((j: any) => j.id === id);
 
     if (job) {
+      job.views = (job.views || 0) + 1;
       return NextResponse.json({ success: true, data: job });
     }
 
