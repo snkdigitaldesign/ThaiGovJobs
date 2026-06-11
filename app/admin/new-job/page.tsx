@@ -325,7 +325,7 @@ export default function NewJobFormPage() {
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
             <div className="p-2 bg-slate-900 text-white rounded-xl">
-              <PlusCircle size={18} className="text-emerald-400" />
+              <PlusCircle size={18} className="text-blue-500" />
             </div>
             <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">เขียนบันทึกประกาศรับสมัครใหม่</h2>
           </div>
@@ -364,7 +364,7 @@ export default function NewJobFormPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="เช่น รับสมัครสอบแข่งขันเพื่อบรรจุและแต่งตั้งเข้ารับราชการ ตำแหน่ง..."
-                className="w-full px-4 py-3 rounded-xl border border-slate-250 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm placeholder:text-slate-400 bg-slate-50/20"
+                className="w-full px-4 py-3 rounded-xl border border-slate-250 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm placeholder:text-slate-400 bg-slate-50/20"
                 disabled={submitting}
               />
             </div>
@@ -382,7 +382,7 @@ export default function NewJobFormPage() {
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
                     placeholder="เช่น กรมสรรพากร"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm placeholder:text-slate-400"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm placeholder:text-slate-400"
                     disabled={submitting}
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -402,7 +402,7 @@ export default function NewJobFormPage() {
                     value={salary}
                     onChange={(e) => setSalary(e.target.value)}
                     placeholder="เช่น 15,000 - 16,500 บาท"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm placeholder:text-slate-400"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm placeholder:text-slate-400"
                     disabled={submitting}
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -421,7 +421,7 @@ export default function NewJobFormPage() {
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm bg-white"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm bg-white"
                   disabled={submitting}
                 >
                   <option value="ข้าราชการ">ข้าราชการ</option>
@@ -440,7 +440,7 @@ export default function NewJobFormPage() {
                   <select
                     value={educationLevel}
                     onChange={(e) => setEducationLevel(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm bg-white appearance-none"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm bg-white appearance-none"
                     disabled={submitting}
                   >
                     <option value="มัธยมศึกษาตอนปลาย">มัธยมศึกษาตอนปลาย</option>
@@ -466,7 +466,7 @@ export default function NewJobFormPage() {
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
                     placeholder="เช่น กรุงเทพมหานคร"
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm placeholder:text-slate-400"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm placeholder:text-slate-400"
                     disabled={submitting}
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -483,7 +483,7 @@ export default function NewJobFormPage() {
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>ตราสัญลักษณ์หน่วยงาน (Logo)</span>
-                  {uploadingLogo && <span className="text-[10px] text-emerald-600 font-semibold animate-pulse">กำลังส่งไฟล์เข้าคลัง Storage...</span>}
+                  {uploadingLogo && <span className="text-[10px] text-blue-600 font-semibold animate-pulse">กำลังส่งไฟล์เข้าคลัง Storage...</span>}
                 </label>
                 {logoUrl ? (
                   <div className="relative border border-slate-200 bg-white p-3 rounded-xl flex items-center gap-3 shadow-sm">
@@ -494,7 +494,7 @@ export default function NewJobFormPage() {
                       className="w-12 h-12 object-contain bg-slate-50 p-1 rounded-lg border border-slate-100"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                      <p className="text-xs font-semibold text-blue-700 flex items-center gap-1">
                         <CheckCircle size={12} /> อัปโหลดและเชื่อมโยงเรียบร้อยแล้ว
                       </p>
                       <span className="text-[10px] text-slate-400 break-all truncate block mt-0.5">{logoUrl}</span>
@@ -514,8 +514,8 @@ export default function NewJobFormPage() {
                     onDrop={(e) => handleDrop(e, false)}
                     className={`relative border-2 border-dashed transition-all duration-200 rounded-xl p-5 text-center cursor-pointer ${
                       dragActiveLogo 
-                        ? "border-emerald-500 bg-emerald-50/20 shadow-md animate-pulse scale-[1.01]" 
-                        : "border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5"
+                        ? "border-blue-500 bg-blue-50/20 shadow-md animate-pulse scale-[1.01]" 
+                        : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/5"
                     }`}
                   >
                     <input
@@ -528,11 +528,11 @@ export default function NewJobFormPage() {
                     <div className="space-y-1">
                       {uploadingLogo ? (
                         <div className="flex flex-col items-center gap-1.5 py-1">
-                          <Loader2 size={24} className="animate-spin text-emerald-500" />
-                          <span className="text-xs font-semibold text-emerald-600">กำลังอัปโหลดอัตโนมัติเข้าระบบ... {logoUploadProgress}%</span>
+                          <Loader2 size={24} className="animate-spin text-blue-500" />
+                          <span className="text-xs font-semibold text-blue-600">กำลังอัปโหลดอัตโนมัติเข้าระบบ... {logoUploadProgress}%</span>
                           <div className="w-full max-w-[150px] bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
                             <div 
-                              className="bg-emerald-500 h-full rounded-full transition-all duration-150"
+                              className="bg-blue-500 h-full rounded-full transition-all duration-150"
                               style={{ width: `${logoUploadProgress}%` }}
                             />
                           </div>
@@ -553,7 +553,7 @@ export default function NewJobFormPage() {
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>ไฟล์ PDF ประกาศฉบับเต็ม</span>
-                  {uploadingPdf && <span className="text-[10px] text-emerald-600 font-semibold animate-pulse">กำลังอัปโหลดเอกสาร...</span>}
+                  {uploadingPdf && <span className="text-[10px] text-blue-600 font-semibold animate-pulse">กำลังอัปโหลดเอกสาร...</span>}
                 </label>
                 {pdfUrl ? (
                   <div className="relative border border-slate-200 bg-white p-3 rounded-xl flex items-center gap-3 shadow-sm">
@@ -561,7 +561,7 @@ export default function NewJobFormPage() {
                       <FileDown size={22} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                      <p className="text-xs font-semibold text-blue-700 flex items-center gap-1">
                         <CheckCircle size={12} /> อัปโหลดเข้าสู่คลัง PDF เรียบร้อยแล้ว
                       </p>
                       <span className="text-[10px] text-slate-400 break-all truncate block mt-0.5">{pdfUrl}</span>
@@ -581,8 +581,8 @@ export default function NewJobFormPage() {
                     onDrop={(e) => handleDrop(e, true)}
                     className={`relative border-2 border-dashed transition-all duration-200 rounded-xl p-5 text-center cursor-pointer ${
                       dragActivePdf 
-                        ? "border-emerald-500 bg-emerald-50/20 shadow-md animate-pulse scale-[1.01]" 
-                        : "border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5"
+                        ? "border-blue-500 bg-blue-50/20 shadow-md animate-pulse scale-[1.01]" 
+                        : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/5"
                     }`}
                   >
                     <input
@@ -595,11 +595,11 @@ export default function NewJobFormPage() {
                     <div className="space-y-1">
                       {uploadingPdf ? (
                         <div className="flex flex-col items-center gap-1.5 py-1">
-                          <Loader2 size={24} className="animate-spin text-emerald-500" />
-                          <span className="text-xs font-semibold text-emerald-600">กำลังโอนถ่ายไฟล์ PDF สำเร็จ... {pdfUploadProgress}%</span>
+                          <Loader2 size={24} className="animate-spin text-blue-500" />
+                          <span className="text-xs font-semibold text-blue-600">กำลังโอนถ่ายไฟล์ PDF สำเร็จ... {pdfUploadProgress}%</span>
                           <div className="w-full max-w-[150px] bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
                             <div 
-                              className="bg-emerald-500 h-full rounded-full transition-all duration-150"
+                              className="bg-blue-500 h-full rounded-full transition-all duration-150"
                               style={{ width: `${pdfUploadProgress}%` }}
                             />
                           </div>
@@ -629,7 +629,7 @@ export default function NewJobFormPage() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm text-slate-700 bg-white"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm text-slate-700 bg-white"
                     disabled={submitting}
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -647,7 +647,7 @@ export default function NewJobFormPage() {
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm text-slate-700 bg-white"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm text-slate-700 bg-white"
                     disabled={submitting}
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -667,7 +667,7 @@ export default function NewJobFormPage() {
                 value={officialUrl}
                 onChange={(e) => setOfficialUrl(e.target.value)}
                 placeholder="เช่น https://job.ocsc.go.th/Jobs/..."
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm placeholder:text-slate-400"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm placeholder:text-slate-400"
                 disabled={submitting}
               />
             </div>
@@ -683,7 +683,7 @@ export default function NewJobFormPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="พิมพ์รายละเอียดเพิ่มเติมตรงนี้ สามารถพิมรูปแบบสิริมงคลหรือสไตล์ความปลอดภัยแอนิมอล เช่น ข้อกำหนด วุฒิที่ต้องการ รายการหลักสูตรที่ใช้สอบ ฯลฯ"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm font-sans"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm font-sans"
                   disabled={submitting}
                 ></textarea>
               </div>
@@ -699,8 +699,8 @@ export default function NewJobFormPage() {
 
             {/* Success message */}
             {successMsg && (
-              <div className="p-4 bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-2xl text-xs flex items-start gap-2.5 animate-fade-in">
-                <CheckCircle size={18} className="text-emerald-500 shrink-0 mt-0.5" />
+              <div className="p-4 bg-blue-50 border border-blue-100 text-blue-800 rounded-2xl text-xs flex items-start gap-2.5 animate-fade-in">
+                <CheckCircle size={18} className="text-blue-500 shrink-0 mt-0.5" />
                 <span>{successMsg}</span>
               </div>
             )}
@@ -722,12 +722,12 @@ export default function NewJobFormPage() {
               >
                 {submitting ? (
                   <>
-                    <Loader2 size={16} className="animate-spin text-emerald-400" />
+                    <Loader2 size={16} className="animate-spin text-blue-400" />
                     <span>กำลังบันทึกข้อมูลเข้าระบบ...</span>
                   </>
                 ) : uploadingLogo || uploadingPdf ? (
                   <>
-                    <Loader2 size={16} className="animate-spin text-emerald-400" />
+                    <Loader2 size={16} className="animate-spin text-blue-400" />
                     <span>กำลังอัปโหลดไฟล์...</span>
                   </>
                 ) : (
