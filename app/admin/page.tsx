@@ -553,7 +553,7 @@ export default function AdminPage() {
                   Supabase Command Center
                 </span>
                 <span className="text-slate-400 text-xs flex items-center gap-1.5 font-medium">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg animate-pulse"></div> แอดมินล็อกอินสมบูรณ์
+                  <div className="w-2 h-2 rounded-full bg-blue-500 shadow-lg animate-pulse"></div> แอดมินล็อกอินสมบูรณ์
                 </span>
               </div>
               <h1 className="text-xl md:text-2xl font-black text-white tracking-tight mt-1 flex items-center gap-2">
@@ -630,11 +630,11 @@ export default function AdminPage() {
                     <div className="bg-gradient-to-tr from-amber-500 to-orange-600 text-slate-950 w-8.5 h-8.5 rounded-2xl flex items-center justify-center text-xs font-black shadow-md border border-white/10">
                       AD
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-1.5 border-slate-900"></div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-blue-500 rounded-full border-1.5 border-slate-900"></div>
                   </div>
                   <div className="truncate max-w-[140px]">
                     <p className="text-xs font-bold text-white leading-normal truncate">{username}</p>
-                    <p className="text-[10px] text-emerald-400 font-medium tracking-tight">สิทธิ์ความคุมระบบเต็มเม็ดหน่วย</p>
+                    <p className="text-[10px] text-blue-400 font-medium tracking-tight">สิทธิ์ความคุมระบบเต็มเม็ดหน่วย</p>
                   </div>
                 </div>
                 
@@ -653,7 +653,7 @@ export default function AdminPage() {
           <div className="bg-[#03060a] rounded-3xl border border-slate-800/90 shadow-2xl overflow-hidden flex flex-col flex-1 min-h-[300px]">
             <div className="p-4 border-b border-slate-800 bg-slate-900/40 flex items-center justify-between shadow-2xs">
               <div className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-md shadow-emerald-500 animate-ping"></div>
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full shadow-md shadow-blue-500 animate-ping"></div>
                 <h3 className="font-mono font-bold text-[11px] uppercase tracking-wider text-slate-300">Supabase Logs (ตารางธุรกรรมเลียนแบบ)</h3>
               </div>
               <span className="text-[9px] font-mono font-bold text-slate-500 uppercase bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">Handshake Live</span>
@@ -664,7 +664,7 @@ export default function AdminPage() {
                 <div key={i} className="flex gap-2">
                   <span className="text-slate-500 shrink-0 select-none">[{log.timestamp}]</span>
                   <div className="flex gap-1.5">
-                    <span className={`font-black shrink-0 ${log.type === 'success' ? 'text-emerald-500' : log.type === 'error' ? 'text-rose-500' : 'text-blue-400'}`}>
+                    <span className={`font-black shrink-0 ${log.type === 'success' ? 'text-blue-500' : log.type === 'error' ? 'text-rose-500' : 'text-blue-400'}`}>
                       {log.type === 'success' ? '✓' : log.type === 'error' ? '✗' : 'ℹ'}
                     </span>
                     <span className="text-slate-300">{log.message}</span>
@@ -829,7 +829,7 @@ export default function AdminPage() {
                           disabled={isUrlScraping}
                           className="bg-[#1e293b] hover:bg-slate-700/85 text-slate-100 font-extrabold text-xs px-4 py-3 rounded-xl flex items-center justify-center gap-2 border border-slate-700 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                         >
-                          <RefreshCw className={`w-4 h-4 text-emerald-450 ${isUrlScraping ? 'animate-spin' : ''}`} />
+                          <RefreshCw className={`w-4 h-4 text-blue-400 ${isUrlScraping ? 'animate-spin' : ''}`} />
                           ดึง ประกาศผลสอบ.com
                         </button>
 
@@ -941,7 +941,7 @@ export default function AdminPage() {
                     <div className="bg-slate-900/40 p-5 rounded-3xl border border-blue-500/20 shadow-xl flex flex-col gap-4.5 animate-fade-in">
                       <div className="flex justify-between items-center bg-blue-500/5 p-3 rounded-2xl border border-blue-550/15">
                         <div className="flex items-center gap-2">
-                          <Check className="w-5 h-5 text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 p-0.5 rounded-full" />
+                          <Check className="w-5 h-5 text-blue-405 border border-blue-500/20 bg-blue-500/10 p-0.5 rounded-full" />
                           <span className="text-xs font-black text-white">ประมวลเนื้อหาจาก ลิงก์ที่กำหนด สำเร็จเรียบร้อย!</span>
                         </div>
                         <button 
@@ -1036,9 +1036,9 @@ export default function AdminPage() {
                         </button>
                         <button
                           onClick={handlePublishManualJob}
-                          className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs rounded-xl shadow transition-transform hover:scale-102 flex items-center gap-1.5"
+                          className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-650 text-white font-black text-xs rounded-xl shadow transition-transform hover:scale-102 flex items-center gap-1.5"
                         >
-                          <Plus className="w-4 h-4 text-slate-950" />
+                          <Plus className="w-4 h-4 text-white" />
                           อนุมัติลงประกาศบนเว็บ
                         </button>
                       </div>
@@ -1051,7 +1051,7 @@ export default function AdminPage() {
               {activeAdminTab === 'published-jobs' && (
                 <div className="flex flex-col gap-4">
                   <div className="bg-slate-900/45 backdrop-blur-md p-5 rounded-3xl border border-slate-800 shadow-md">
-                    <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/20 inline-block uppercase">
+                    <span className="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-blue-500/20 inline-block uppercase">
                       Jobs Table Monitor
                     </span>
                     <h2 className="text-lg font-black text-white mt-1">ประกาศเผยแพร่ปัจจุบันที่เป็นสากล (Jobs database records)</h2>
@@ -1069,7 +1069,7 @@ export default function AdminPage() {
                               {job.category}
                             </span>
                             <span className="text-slate-500 text-[10.5px] font-mono">ID: {job.id}</span>
-                            <span className="text-[10px] text-emerald-400 font-bold font-mono">● PUBLISHED</span>
+                            <span className="text-[10px] text-blue-400 font-bold font-mono">● PUBLISHED</span>
                           </div>
                           <h4 className="font-extrabold text-white text-xs sm:text-sm truncate">{job.title}</h4>
                           <p className="text-[10.5px] text-slate-400 font-mono">วุฒิ: {job.education_level} | จังหวัด: {job.region} | สมัครช่วง: {job.application_start_date} ถึง {job.application_end_date}</p>
@@ -1186,7 +1186,7 @@ export default function AdminPage() {
                           onClick={handleCopyClipboard}
                           className="text-[10px] font-bold text-slate-250 bg-slate-850 hover:bg-slate-800 px-3.5 py-2 rounded-xl transition-all duration-200 border border-slate-800/80 flex items-center gap-1 cursor-pointer"
                         >
-                          {copied ? <Check className="w-4.5 h-4.5 text-emerald-400" /> : <Copy className="w-4.5 h-4.5 text-slate-400" />}
+                          {copied ? <Check className="w-4.5 h-4.5 text-blue-450" /> : <Copy className="w-4.5 h-4.5 text-slate-400" />}
                           {copied ? 'คัดลอกแล้ว!' : 'Copy Code'}
                         </button>
                       </div>
@@ -1338,7 +1338,7 @@ export default function AdminPage() {
                 disabled={isProcessingWithAI}
                 className="bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-500 hover:to-indigo-555 text-white font-black text-xs px-6 py-2.5 rounded-xl transition-transform hover:scale-103 shadow flex items-center gap-2 cursor-pointer"
               >
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 text-blue-400" />
                 เซ็นอนุมัติเผยแพร่เข้าระบบ (Jobs DB)
               </button>
             </div>
@@ -1352,7 +1352,7 @@ export default function AdminPage() {
 // Log level bullet representation helpers
 function LogLevelIcon({ type }: { type: 'info' | 'success' | 'error' }) {
   if (type === 'success') {
-    return <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />;
+    return <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />;
   }
   if (type === 'error') {
     return <LogOut className="w-3.5 h-3.5 text-rose-500 shrink-0" />;
