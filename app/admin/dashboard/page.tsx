@@ -408,7 +408,7 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-slate-900 text-white rounded-xl shadow-md">
-              <Shield size={18} className="text-emerald-400" />
+              <Shield size={18} className="text-blue-500" />
             </div>
             <div>
               <h1 className="text-base font-bold text-slate-800">แผงควบคุมผู้ดูแลระบบ</h1>
@@ -434,9 +434,9 @@ export default function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-10 flex-1 w-full space-y-6">
         {/* Welcome Block */}
         <section className="bg-slate-950 text-white p-6 md:p-8 rounded-3xl relative overflow-hidden shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.1),transparent)] pointer-events-none"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(19,112,176,0.15),transparent)] pointer-events-none"></div>
           <div>
-            <div className="flex items-center gap-2 mb-2 text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full w-fit text-xs font-mono">
+            <div className="flex items-center gap-2 mb-2 text-blue-400 bg-blue-400/10 px-3 py-1 rounded-full w-fit text-xs font-mono">
               <Sparkles size={14} />
               <span>ก.พ. Live Feed Database Connected</span>
             </div>
@@ -449,7 +449,7 @@ export default function AdminDashboard() {
           <Link
             id="btn-add-new-job"
             href="/admin/new-job"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 shrink-0"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95 shrink-0"
           >
             <Plus size={16} />
             เพิ่มประกาศงานใหม่
@@ -460,12 +460,12 @@ export default function AdminDashboard() {
         <div className="space-y-3">
           <div className={`p-4 rounded-2xl text-xs flex items-center justify-between border ${
             isSupabase && (!dbStatus || dbStatus.success)
-              ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
+              ? 'bg-blue-50 border-blue-155 text-blue-800'
               : 'bg-amber-50 border-amber-100 text-amber-900'
           }`}>
             <div className="flex items-center gap-2.5">
               {isSupabase && (!dbStatus || dbStatus.success) ? (
-                <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                <CheckCircle2 size={16} className="text-blue-500 shrink-0" />
               ) : (
                 <AlertTriangle size={16} className="text-amber-500 shrink-0" />
               )}
@@ -506,11 +506,11 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className={`p-4 rounded-2xl text-sm flex items-start gap-3 border ${
-                feedback.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' : 'bg-rose-50 border-rose-100 text-rose-800'
+                feedback.type === 'success' ? 'bg-blue-50 border-blue-100 text-blue-800' : 'bg-rose-50 border-rose-100 text-rose-800'
               }`}
             >
               {feedback.type === 'success' ? (
-                <CheckCircle2 size={18} className="text-emerald-500 shrink-0 mt-0.5" />
+                <CheckCircle2 size={18} className="text-blue-500 shrink-0 mt-0.5" />
               ) : (
                 <AlertCircle size={18} className="text-rose-500 shrink-0 mt-0.5" />
               )}
@@ -533,7 +533,7 @@ export default function AdminDashboard() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="พิมพ์ชื่อค้นหา ตำแหน่ง หรือ หน่วยงาน..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/15 focus:border-red-500 text-xs transition-all placeholder:text-slate-400"
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/15 focus:border-blue-500 text-xs transition-all placeholder:text-slate-400"
             />
           </div>
         </section>
@@ -630,10 +630,10 @@ export default function AdminDashboard() {
               <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 bg-slate-900 text-white rounded-xl">
-                    <Edit size={16} className="text-emerald-400" />
+                    <Edit size={16} className="text-blue-500" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800 text-sm md:text-base">แก้ไขประกาศระแบบปฏิทินงาน</h3>
+                    <h3 className="font-bold text-slate-800 text-sm md:text-base">แก้ไขประกาศระบบปฏิทินงาน</h3>
                     <p className="text-[10px] text-slate-400 uppercase font-mono">EDIT ACTIVE GOV APPLICANT</p>
                   </div>
                 </div>
@@ -656,7 +656,7 @@ export default function AdminDashboard() {
                       required
                       value={editingJob.title}
                       onChange={(e) => setEditingJob({ ...editingJob, title: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
                     />
                   </div>
 
@@ -668,7 +668,7 @@ export default function AdminDashboard() {
                         required
                         value={editingJob.department}
                         onChange={(e) => setEditingJob({ ...editingJob, department: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
                       />
                     </div>
 
@@ -679,7 +679,7 @@ export default function AdminDashboard() {
                         required
                         value={editingJob.salary}
                         onChange={(e) => setEditingJob({ ...editingJob, salary: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
                       />
                     </div>
                   </div>
@@ -690,7 +690,7 @@ export default function AdminDashboard() {
                       <select
                         value={editingJob.category}
                         onChange={(e) => setEditingJob({ ...editingJob, category: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
                       >
                         <option value="ข้าราชการ">ข้าราชการ</option>
                         <option value="พนักงานราชการ">พนักงานราชการ</option>
@@ -705,7 +705,7 @@ export default function AdminDashboard() {
                       <select
                         value={editingJob.education_level}
                         onChange={(e) => setEditingJob({ ...editingJob, education_level: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
                       >
                         <option value="ปวช. / ปวส.">ปวช. / ปวส.</option>
                         <option value="ปริญญาตรี">ปริญญาตรี</option>
@@ -722,7 +722,7 @@ export default function AdminDashboard() {
                         value={editingJob.region}
                         onChange={(e) => setEditingJob({ ...editingJob, region: e.target.value })}
                         placeholder="เช่น กรุงเทพมหานคร, ทั่วประเทศ"
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
                       />
                     </div>
                   </div>
@@ -734,7 +734,7 @@ export default function AdminDashboard() {
                         type="date"
                         value={editingJob.application_start_date ? editingJob.application_start_date.split('T')[0] : ''}
                         onChange={(e) => setEditingJob({ ...editingJob, application_start_date: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
                       />
                     </div>
 
@@ -744,7 +744,7 @@ export default function AdminDashboard() {
                         type="date"
                         value={editingJob.application_end_date ? editingJob.application_end_date.split('T')[0] : ''}
                         onChange={(e) => setEditingJob({ ...editingJob, application_end_date: e.target.value })}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
                       />
                     </div>
                   </div>
@@ -756,7 +756,7 @@ export default function AdminDashboard() {
                       value={editingJob.officialUrl || editingJob.source_url}
                       onChange={(e) => setEditingJob({ ...editingJob, officialUrl: e.target.value })}
                       placeholder="https://..."
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
                     />
                   </div>
 
@@ -767,7 +767,7 @@ export default function AdminDashboard() {
                     <div>
                       <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
                         <span>ตราสัญลักษณ์หน่วยงาน (Logo)</span>
-                        {uploadingLogo && <span className="text-[10px] text-emerald-600 font-semibold animate-pulse">กำลังอัปโหลด...</span>}
+                        {uploadingLogo && <span className="text-[10px] text-blue-600 font-semibold animate-pulse">กำลังอัปโหลด...</span>}
                       </label>
                       {editingJob.logo_url ? (
                         <div className="relative border border-slate-200 bg-white p-2.5 rounded-xl flex items-center gap-2 flex-wrap shadow-xs">
@@ -778,7 +778,7 @@ export default function AdminDashboard() {
                             className="w-10 h-10 object-contain bg-slate-50 p-1 rounded-lg border border-slate-100 shrink-0"
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                            <p className="text-[11px] font-semibold text-blue-700 flex items-center gap-1">
                               <CheckCircle2 size={10} /> อัปโหลดสำเร็จ
                             </p>
                             <span className="text-[9px] text-slate-400 break-all truncate block">{editingJob.logo_url}</span>
@@ -793,13 +793,13 @@ export default function AdminDashboard() {
                         </div>
                       ) : (
                         <div 
-                          onDragOver={(e) => handleDragOverEdit(e, false)}
-                          onDragLeave={(e) => handleDragLeaveEdit(e, false)}
-                          onDrop={(e) => handleDropEdit(e, false)}
-                          className={`relative border border-dashed transition-all duration-200 rounded-xl p-3 text-center cursor-pointer ${
+                           onDragOver={(e) => handleDragOverEdit(e, false)}
+                           onDragLeave={(e) => handleDragLeaveEdit(e, false)}
+                           onDrop={(e) => handleDropEdit(e, false)}
+                           className={`relative border border-dashed transition-all duration-200 rounded-xl p-3 text-center cursor-pointer ${
                             dragActiveLogo 
-                              ? "border-emerald-500 bg-emerald-50/20 shadow-xs scale-[1.01]" 
-                              : "border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5"
+                              ? "border-blue-500 bg-blue-50/20 shadow-xs scale-[1.01]" 
+                              : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/5"
                           }`}
                         >
                           <input
@@ -812,11 +812,11 @@ export default function AdminDashboard() {
                           <div className="space-y-0.5">
                             {uploadingLogo ? (
                               <div className="flex flex-col items-center gap-1 py-1">
-                                <Loader2 size={16} className="animate-spin text-emerald-500" />
+                                <Loader2 size={16} className="animate-spin text-blue-500" />
                                 <span className="text-[10px] text-slate-500">อัปโหลด... {logoUploadProgress}%</span>
                                 <div className="w-full max-w-[100px] bg-slate-100 rounded-full h-1 overflow-hidden mt-0.5">
                                   <div 
-                                    className="bg-emerald-500 h-full rounded-full transition-all duration-150"
+                                    className="bg-blue-550 h-full rounded-full transition-all duration-150 img-prog-bar"
                                     style={{ width: `${logoUploadProgress}%` }}
                                   />
                                 </div>
@@ -836,7 +836,7 @@ export default function AdminDashboard() {
                     <div>
                       <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
                         <span>ไฟล์ PDF ประกาศฉบับเต็ม</span>
-                        {uploadingPdf && <span className="text-[10px] text-emerald-600 font-semibold animate-pulse">กำลังอัปโหลด...</span>}
+                        {uploadingPdf && <span className="text-[10px] text-blue-600 font-semibold animate-pulse">กำลังอัปโหลด...</span>}
                       </label>
                       {editingJob.pdf_url ? (
                         <div className="relative border border-slate-200 bg-white p-2.5 rounded-xl flex items-center gap-2 flex-wrap shadow-xs">
@@ -844,7 +844,7 @@ export default function AdminDashboard() {
                             <FileDown size={18} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                            <p className="text-[11px] font-semibold text-blue-700 flex items-center gap-1">
                               <CheckCircle2 size={10} /> อัปโหลดสำเร็จ
                             </p>
                             <span className="text-[9px] text-slate-400 break-all truncate block">{editingJob.pdf_url}</span>
@@ -864,8 +864,8 @@ export default function AdminDashboard() {
                           onDrop={(e) => handleDropEdit(e, true)}
                           className={`relative border border-dashed transition-all duration-200 rounded-xl p-3 text-center cursor-pointer ${
                             dragActivePdf 
-                              ? "border-emerald-500 bg-emerald-50/20 shadow-xs scale-[1.01]" 
-                              : "border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/5"
+                              ? "border-blue-500 bg-blue-50/20 shadow-xs scale-[1.01]" 
+                              : "border-slate-200 hover:border-blue-400 hover:bg-blue-50/5"
                           }`}
                         >
                           <input
@@ -878,11 +878,11 @@ export default function AdminDashboard() {
                           <div className="space-y-0.5">
                             {uploadingPdf ? (
                               <div className="flex flex-col items-center gap-1 py-1">
-                                <Loader2 size={16} className="animate-spin text-emerald-500" />
+                                <Loader2 size={16} className="animate-spin text-blue-500" />
                                 <span className="text-[10px] text-slate-500">อัปโหลด... {pdfUploadProgress}%</span>
                                 <div className="w-full max-w-[100px] bg-slate-100 rounded-full h-1 overflow-hidden mt-0.5">
                                   <div 
-                                    className="bg-emerald-500 h-full rounded-full transition-all duration-150"
+                                    className="bg-blue-500 h-full rounded-full transition-all duration-150"
                                     style={{ width: `${pdfUploadProgress}%` }}
                                   />
                                 </div>
@@ -907,7 +907,7 @@ export default function AdminDashboard() {
                       value={editingJob.description}
                       onChange={(e) => setEditingJob({ ...editingJob, description: e.target.value })}
                       placeholder="ระบุคุณสมบัติ รายละเอียดเนื้อหาประกาศงาน และช่องทางการสมัครเพิ่มเติม..."
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 text-sm font-sans"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm font-sans"
                     ></textarea>
                   </div>
                 </div>
@@ -928,12 +928,12 @@ export default function AdminDashboard() {
                   >
                     {submittingEdit ? (
                       <>
-                        <Loader2 className="animate-spin text-emerald-400" size={14} />
+                        <Loader2 className="animate-spin text-blue-300" size={14} />
                         <span>กำลังอัปเดตข้อมูล...</span>
                       </>
                     ) : uploadingLogo || uploadingPdf ? (
                       <>
-                        <Loader2 className="animate-spin text-emerald-400" size={14} />
+                        <Loader2 className="animate-spin text-blue-300" size={14} />
                         <span>กำลังอัปโหลดไฟล์...</span>
                       </>
                     ) : (
