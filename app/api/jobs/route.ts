@@ -25,6 +25,7 @@ export interface JobItem {
   application_end_date?: string;
   logo_url?: string;
   pdf_url?: string;
+  views?: number;
 }
 
 function formatThaiDate(dateString: string): string {
@@ -158,7 +159,8 @@ export async function GET() {
           application_start_date: item.application_start_date,
           application_end_date: item.application_end_date,
           logo_url: item.logo_url,
-          pdf_url: item.pdf_url
+          pdf_url: item.pdf_url,
+          views: item.views || 0
         }));
 
         // Merge manual in-memory entries to keep them synchronized (such as those saved under mock bypass)
