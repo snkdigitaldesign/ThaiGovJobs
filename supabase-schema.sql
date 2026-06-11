@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.jobs (
   source_url TEXT,
   logo_url TEXT,
   pdf_url TEXT,
+  views INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
