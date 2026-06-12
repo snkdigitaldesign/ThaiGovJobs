@@ -20,7 +20,8 @@ import {
   Image as ImageIcon,
   UploadCloud,
   Trash2,
-  FileDown
+  FileDown,
+  Users
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -57,6 +58,7 @@ export default function NewJobFormPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   
+  const [totalPositions, setTotalPositions] = useState<number | ''>('');
   const [description, setDescription] = useState(''); // Textarea Markdown
 
   // Check auth status
@@ -251,7 +253,8 @@ export default function NewJobFormPage() {
           application_end_date: endDate || null,
           description, // Markdown content
           logo_url: logoUrl || null,
-          pdf_url: pdfUrl || null
+          pdf_url: pdfUrl || null,
+          total_positions: totalPositions || null
         }),
       });
 
@@ -285,6 +288,7 @@ export default function NewJobFormPage() {
       setDescription('');
       setLogoUrl('');
       setPdfUrl('');
+      setTotalPositions('');
       
       // Transition back after delay
       setTimeout(() => {
@@ -370,7 +374,7 @@ export default function NewJobFormPage() {
             </div>
 
             {/* 2. Department & Salary inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                   หน่วยงานผู้จัดสอบ *
@@ -407,6 +411,26 @@ export default function NewJobFormPage() {
                   />
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <CircleDollarSign size={16} />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  จำนวนอัตราที่รับ (ตำแหน่ง)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    value={totalPositions}
+                    onChange={(e) => setTotalPositions(e.target.value ? parseInt(e.target.value) : '')}
+                    placeholder="เช่น 5 (เว้นว่างไว้หากไม่ระบุ)"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm placeholder:text-slate-400"
+                    disabled={submitting}
+                  />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Users size={16} />
                   </div>
                 </div>
               </div>
