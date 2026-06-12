@@ -446,38 +446,7 @@ export default async function JobDetailPage({ params }: PageProps) {
 
         </article>
 
-        {/* Google AdSense Responsive Unit - Displayed below the main Job details spec card */}
-        <div id="adsense-job-bottom" className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-[0_12px_45px_rgba(0,0,0,0.015)] flex flex-col md:flex-row items-center justify-between gap-6 relative border-dashed border-slate-200">
-          <div className="flex items-start gap-4 flex-1 min-w-0">
-            <div className="p-2.5 rounded-xl bg-orange-50 text-orange-600 shrink-0 select-none">
-              <Sparkles size={20} className="className animate-pulse" />
-            </div>
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase block">ผู้สนับสนุน (Advertisement)</span>
-              <h3 className="text-sm font-bold text-slate-800">แนะนำเนื้อหาที่น่าสนใจและข้อมูลสนับสนุนจากพาร์ทเนอร์</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                กล่องแสดงเนื้อหาโฆษณาที่ปรับแต่งตามความเหมาะสมและความพึงพอใจของคุณจาก Google AdSense
-              </p>
-            </div>
-          </div>
-          {/* Ad Container Script Segment
-            <ins className="adsbygoogle"
-                 style={{ display: 'block' }}
-                 data-ad-client="ca-pub-8865019487278078"
-                 data-ad-slot="YOUR-BOTTOM-DETAIL-AD-SLOT"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
-          */}
-          <div className="shrink-0 flex flex-col items-center sm:items-end gap-1 select-none">
-            <span className="text-[10px] font-bold text-slate-400 font-mono">ca-pub-8865019487278078</span>
-            <span className="text-[9px] font-bold bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-md text-slate-400 uppercase">
-              Responsive Unit
-            </span>
-          </div>
-        </div>
+
 
       </div>
     </main>
