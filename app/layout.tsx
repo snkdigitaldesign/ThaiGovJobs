@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import Script from 'next/script';
 import './globals.css';
 
 const inter = Inter({
@@ -20,14 +19,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="th" className={`${inter.variable}`}>
-      <body className="antialiased min-h-screen bg-slate-50 text-slate-900">
-        <Script
+      <head>
+        <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8865019487278078"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
-          id="adsense-init"
         />
+      </head>
+      <body className="antialiased min-h-screen bg-slate-50 text-slate-900">
         {children}
       </body>
     </html>
