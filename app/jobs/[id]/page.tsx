@@ -18,7 +18,8 @@ import {
   XCircle,
   Share2,
   FileDown,
-  Eye
+  Eye,
+  Sparkles
 } from 'lucide-react';
 import ShareButtons from './ShareButtons';
 import { getSupabase } from '@/lib/supabase';
@@ -36,6 +37,7 @@ export interface JobItem {
   officialUrl: string;
   isQuickScrape?: boolean;
   views?: number;
+  total_positions?: number;
 
   // Additional metadata payload
   application_end_date?: string;
@@ -114,7 +116,8 @@ async function getJobById(id: string, incrementViews: boolean = false): Promise<
           category: data.category,
           logo_url: data.logo_url || undefined,
           pdf_url: data.pdf_url || undefined,
-          views: finalViews
+          views: finalViews,
+          total_positions: data.total_positions || undefined
         };
       }
     } catch (e) {
@@ -135,7 +138,8 @@ async function getJobById(id: string, incrementViews: boolean = false): Promise<
       source_url: found.officialUrl || undefined,
       logo_url: found.logo_url || undefined,
       pdf_url: found.pdf_url || undefined,
-      views: found.views || 1
+      views: found.views || 1,
+      total_positions: found.total_positions || undefined
     };
   }
   return undefined;
@@ -281,12 +285,14 @@ export default async function JobDetailPage({ params }: PageProps) {
             
             <div className="relative z-10 flex flex-col md:flex-row gap-6 items-start">
               {job.logo_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={job.logo_url}
-                  alt={job.department}
-                  className="w-20 h-20 md:w-28 md:h-28 object-contain bg-white rounded-2xl md:rounded-3xl p-2.5 md:p-3.5 border border-slate-800 shrink-0 shadow-xl"
-                />
+                <div className="w-24 h-24 md:w-28 md:h-28 bg-white border border-slate-800 rounded-2xl md:rounded-3xl shadow-xl overflow-hidden flex items-center justify-center p-1.5 shrink-0 select-none">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={job.logo_url}
+                    alt={job.department}
+                    className="w-full h-full object-contain scale-[1.35] md:scale-[1.4] transition-transform duration-300 hover:scale-[1.45]"
+                  />
+                </div>
               )}
               <div className="space-y-4 flex-1">
                 <div className="flex flex-wrap items-center gap-2.5">
@@ -322,8 +328,21 @@ export default async function JobDetailPage({ params }: PageProps) {
           {/* Specs Bento Panel Grid */}
           <div className="p-6 md:p-8 bg-[#fafbfc]/30 border-b border-slate-50">
             <h3 className="text-xs font-bold text-slate-400 font-mono tracking-wider mb-4 uppercase">Spec-Sheet parameters</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
+              {/* Total Positions parameter */}
+              <div className="p-4 rounded-xl bg-orange-50/70 border border-orange-200/50 flex items-start gap-4 shadow-xs select-none">
+                <div className="p-2 ml-0.5 rounded-lg bg-orange-500 text-white shrink-0">
+                  <Users size={16} />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold text-orange-600 uppercase tracking-wide">จำนวนอัตราที่เปิดรับ</span>
+                  <span className="text-xs md:text-sm font-extrabold text-orange-950">
+                    {job.total_positions ? `${job.total_positions} อัตรา` : 'หลายอัตรา (ตามระเบียบการ)'}
+                  </span>
+                </div>
+              </div>
+
               {/* Salary bento bar */}
               <div className="p-4 rounded-xl bg-white border border-slate-100 flex items-start gap-3 shadow-xs">
                 <div className="p-2 rounded-lg bg-blue-50 text-blue-600 shrink-0">
@@ -349,7 +368,7 @@ export default async function JobDetailPage({ params }: PageProps) {
               </div>
 
               {/* Calendar Registration period */}
-              <div className="p-4 rounded-xl bg-white border border-slate-100 flex items-start gap-3 shadow-xs sm:col-span-2 lg:col-span-1">
+              <div className="p-4 rounded-xl bg-white border border-slate-100 flex items-start gap-3 shadow-xs">
                 <div className="p-2 rounded-lg bg-[#f0f7ff] text-blue-600 shrink-0">
                   <Calendar size={16} />
                 </div>
@@ -426,6 +445,39 @@ export default async function JobDetailPage({ params }: PageProps) {
           </div>
 
         </article>
+
+        {/* Google AdSense Responsive Unit - Displayed below the main Job details spec card */}
+        <div id="adsense-job-bottom" className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-[0_12px_45px_rgba(0,0,0,0.015)] flex flex-col md:flex-row items-center justify-between gap-6 relative border-dashed border-slate-200">
+          <div className="flex items-start gap-4 flex-1 min-w-0">
+            <div className="p-2.5 rounded-xl bg-orange-50 text-orange-600 shrink-0 select-none">
+              <Sparkles size={20} className="className animate-pulse" />
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase block">ผู้สนับสนุน (Advertisement)</span>
+              <h3 className="text-sm font-bold text-slate-800">แนะนำเนื้อหาที่น่าสนใจและข้อมูลสนับสนุนจากพาร์ทเนอร์</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                กล่องแสดงเนื้อหาโฆษณาที่ปรับแต่งตามความเหมาะสมและความพึงพอใจของคุณจาก Google AdSense
+              </p>
+            </div>
+          </div>
+          {/* Ad Container Script Segment
+            <ins className="adsbygoogle"
+                 style={{ display: 'block' }}
+                 data-ad-client="ca-pub-8865019487278078"
+                 data-ad-slot="YOUR-BOTTOM-DETAIL-AD-SLOT"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+          */}
+          <div className="shrink-0 flex flex-col items-center sm:items-end gap-1 select-none">
+            <span className="text-[10px] font-bold text-slate-400 font-mono">ca-pub-8865019487278078</span>
+            <span className="text-[9px] font-bold bg-slate-50 border border-slate-150 px-2 py-0.5 rounded-md text-slate-400 uppercase">
+              Responsive Unit
+            </span>
+          </div>
+        </div>
 
       </div>
     </main>
