@@ -553,33 +553,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Google AdSense Banner Placement below Filter Panel */}
-        <div id="adsense-top-banner" className="w-full bg-white rounded-3xl border border-slate-100 p-5 shadow-[0_4px_25px_rgba(0,0,0,0.015)] flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden relative border-dashed border-slate-200">
-          <div className="flex items-center gap-3.5 flex-1 min-w-0">
-            <div className="p-2 ml-1 rounded-xl bg-orange-50 text-orange-600 font-mono text-[9px] font-bold uppercase tracking-wider shrink-0 select-none">
-              Ad Unit
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase block">ผู้สนับสนุน (Advertisement)</span>
-              <h4 className="font-bold text-slate-700 text-xs sm:text-sm">พื้นที่แสดงโฆษณา Google AdSense - Responsive Banner</h4>
-              <p className="text-[10.5px] text-slate-400 leading-normal">เนื้อหาโฆษณาที่เกี่ยวข้องและเป็นประโยชน์ต่อคุณจะแสดงผลที่นี่โดยอัตโนมัติ</p>
-            </div>
-          </div>
-          {/* Ad Container Core code
-            <ins className="adsbygoogle"
-                 style={{ display: 'block' }}
-                 data-ad-client="ca-pub-8865019487278078"
-                 data-ad-slot="YOUR-BANNER-AD-SLOT"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
-            <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
-            </script>
-          */}
-          <div className="shrink-0 text-slate-400 text-[10px] bg-slate-50 border border-slate-150 rounded-xl px-3 py-1.5 font-bold uppercase select-none">
-            pub-8865019487278078
-          </div>
-        </div>
+
 
         {/* Dynamic Agency Grid Panel when activeTab is "agency" */}
         {activeTab === 'agency' && (
@@ -769,40 +743,7 @@ export default function Home() {
                         </div>
                       </motion.div>
 
-                      {/* Google AdSense In-Feed Native Ad Unit - Displayed after every 4th list card (except the very last one) */}
-                      {(idx + 1) % 4 === 0 && (idx + 1) !== displayJobs.length && (
-                        <div id={`adsense-infeed-${idx}`} className="w-full bg-slate-50/40 rounded-3xl border border-dashed border-slate-200/80 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 transition duration-200 hover:bg-slate-50/80 select-none">
-                          <div className="flex items-center gap-4 flex-1 min-w-0">
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-350 text-[10px] font-bold tracking-tight shrink-0 shadow-2xs">
-                              ADS
-                            </div>
-                            <div className="space-y-0.5">
-                              <div className="flex items-center gap-1.5">
-                                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[8.5px] font-bold tracking-wider uppercase border border-slate-200/40">
-                                  SPONSORED
-                                </span>
-                                <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">ผู้สนับสนุน</span>
-                              </div>
-                              <h5 className="font-bold text-slate-650 text-xs sm:text-sm">ข่าวด่วน/เคล็ดลับสิทธิ์สอบรับราชการปี 2569</h5>
-                              <p className="text-[10.5px] text-slate-400">โฆษณาแนะนำหนังสือเฉลยข้อสอบ ภาค ก และตัวช่วยเตรียมสอบแข่งขัน</p>
-                            </div>
-                          </div>
-                          {/* In-feed Ad script tag code
-                            <ins className="adsbygoogle"
-                                 style={{ display: 'block' }}
-                                 data-ad-format="fluid"
-                                 data-ad-layout-key="-fb+5w+4e-db+86"
-                                 data-ad-client="ca-pub-8865019487278078"
-                                 data-ad-slot="YOUR-IN-FEED-AD-SLOT"></ins>
-                            <script>
-                                 (adsbygoogle = window.adsbygoogle || []).push({});
-                            </script>
-                          */}
-                          <span className="shrink-0 text-slate-350 text-[9px] font-mono border border-slate-150/80 rounded-lg px-2 py-1 select-none">
-                            In-Feed Ad Unit
-                          </span>
-                        </div>
-                      )}
+
                     </Fragment>
                   );
                 })}
