@@ -124,7 +124,8 @@ export async function PUT(
         application_end_date: body.application_end_date || null,
         source_url: body.source_url || body.officialUrl || '',
         logo_url: body.logo_url || null,
-        pdf_url: body.pdf_url || null
+        pdf_url: body.pdf_url || null,
+        total_positions: body.total_positions || null
       };
 
       const { data, error } = await supabase
@@ -152,7 +153,8 @@ export async function PUT(
             requirements: body.education_level || body.requirements,
             officialUrl: body.source_url || body.officialUrl,
             logo_url: body.logo_url,
-            pdf_url: body.pdf_url
+            pdf_url: body.pdf_url,
+            total_positions: body.total_positions
           };
         }
 
@@ -179,6 +181,7 @@ export async function PUT(
         officialUrl: body.officialUrl || body.source_url || store[index].officialUrl,
         logo_url: body.logo_url || store[index].logo_url,
         pdf_url: body.pdf_url || store[index].pdf_url,
+        total_positions: body.total_positions || store[index].total_positions,
       };
       return NextResponse.json({ success: true, data: store[index], message: 'แก้ไขข้อมูลใน Memory สำเร็จ', dbError: dbUpdateError });
     }
