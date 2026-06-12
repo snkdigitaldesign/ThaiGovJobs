@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import Logo from '@/components/Logo';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
@@ -52,6 +52,7 @@ export interface JobItem {
   application_end_date?: string;
   logo_url?: string;
   pdf_url?: string;
+  total_positions?: number;
 }
 
 function checkIfRequiresPartA(job: JobItem): boolean {
@@ -552,6 +553,34 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Google AdSense Banner Placement below Filter Panel */}
+        <div id="adsense-top-banner" className="w-full bg-white rounded-3xl border border-slate-100 p-5 shadow-[0_4px_25px_rgba(0,0,0,0.015)] flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden relative border-dashed border-slate-200">
+          <div className="flex items-center gap-3.5 flex-1 min-w-0">
+            <div className="p-2 ml-1 rounded-xl bg-orange-50 text-orange-600 font-mono text-[9px] font-bold uppercase tracking-wider shrink-0 select-none">
+              Ad Unit
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase block">ผู้สนับสนุน (Advertisement)</span>
+              <h4 className="font-bold text-slate-700 text-xs sm:text-sm">พื้นที่แสดงโฆษณา Google AdSense - Responsive Banner</h4>
+              <p className="text-[10.5px] text-slate-400 leading-normal">เนื้อหาโฆษณาที่เกี่ยวข้องและเป็นประโยชน์ต่อคุณจะแสดงผลที่นี่โดยอัตโนมัติ</p>
+            </div>
+          </div>
+          {/* Ad Container Core code
+            <ins className="adsbygoogle"
+                 style={{ display: 'block' }}
+                 data-ad-client="ca-pub-8865019487278078"
+                 data-ad-slot="YOUR-BANNER-AD-SLOT"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+            <script>
+                 (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+          */}
+          <div className="shrink-0 text-slate-400 text-[10px] bg-slate-50 border border-slate-150 rounded-xl px-3 py-1.5 font-bold uppercase select-none">
+            pub-8865019487278078
+          </div>
+        </div>
+
         {/* Dynamic Agency Grid Panel when activeTab is "agency" */}
         {activeTab === 'agency' && (
           <motion.div
@@ -639,96 +668,142 @@ export default function Home() {
                 {displayJobs.map((job, idx) => {
                   const countdown = getCountdownText(job.application_end_date);
                   return (
-                    <motion.div
-                      key={job.id}
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
-                      transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 1.2) }}
-                      onClick={() => router.push(`/jobs/${job.id}`)}
-                      className="bg-white border border-slate-100 hover:border-blue-500/20 rounded-3xl p-5 md:p-6 transition-all duration-300 hover:shadow-[0_12px_30px_rgba(19,112,176,0.06)] flex flex-col justify-between group cursor-pointer relative overflow-hidden pl-7 md:pl-8"
-                    >
-                      {/* Accent color left strip */}
-                      <div className="absolute top-0 bottom-0 left-0 w-[4px] bg-slate-100 group-hover:bg-gradient-to-b group-hover:from-blue-600 group-hover:to-sky-500 transition-all duration-300"></div>
+                    <Fragment key={job.id}>
+                      <motion.div
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ duration: 0.3, delay: Math.min(idx * 0.04, 1.2) }}
+                        onClick={() => router.push(`/jobs/${job.id}`)}
+                        className="bg-white border border-slate-100 hover:border-blue-500/20 rounded-3xl p-5 md:p-6 transition-all duration-300 hover:shadow-[0_12px_30px_rgba(19,112,176,0.06)] flex flex-col justify-between group cursor-pointer relative overflow-hidden pl-7 md:pl-8"
+                      >
+                        {/* Accent color left strip */}
+                        <div className="absolute top-0 bottom-0 left-0 w-[4px] bg-slate-100 group-hover:bg-gradient-to-b group-hover:from-blue-600 group-hover:to-sky-500 transition-all duration-300"></div>
 
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-8 w-full">
-                        {/* Left & Middle grouping */}
-                        <div className="flex flex-col sm:flex-row items-start gap-4 flex-1 min-w-0">
-                          {job.logo_url && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={job.logo_url}
-                              alt={job.department}
-                              className="w-16 h-16 md:w-[84px] md:h-[84px] object-contain bg-white p-2 md:p-2.5 rounded-2xl md:rounded-3xl border border-slate-200/90 shadow-sm shrink-0 self-start sm:self-center"
-                            />
-                          )}
-                          <div className="space-y-2 flex-1 min-w-0">
-                            {/* Badges & Meta */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 text-[10px] font-bold tracking-tight border border-blue-100/50">
-                                {job.category || job.requirements?.split('|')?.[2]?.replace('หมวดหมู่:', '')?.trim() || 'ข้าราชการ'}
-                              </span>
-                              
-                              {job.createdAt && isRecentJob(job.createdAt) && (
-                                <span className="px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-[9px] font-bold tracking-wide uppercase border border-orange-200 flex items-center gap-0.5">
-                                  <Sparkles size={10} className="text-orange-600 shrink-0" />
-                                  ล่าสุด
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-8 w-full">
+                          {/* Left & Middle grouping */}
+                          <div className="flex flex-col sm:flex-row items-start gap-4 flex-1 min-w-0">
+                            {job.logo_url && (
+                              <div className="w-24 h-24 md:w-28 md:h-28 bg-white border border-slate-200/90 rounded-2xl md:rounded-[22px] shadow-sm overflow-hidden flex items-center justify-center p-1 shrink-0 self-start sm:self-center select-none">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={job.logo_url}
+                                  alt={job.department}
+                                  className="w-full h-full object-contain scale-[1.35] md:scale-[1.4] transition-transform duration-300 group-hover:scale-[1.45]"
+                                />
+                              </div>
+                            )}
+                            <div className="space-y-2 flex-1 min-w-0">
+                              {/* Badges & Meta */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 text-[10px] font-bold tracking-tight border border-blue-100/50">
+                                  {job.category || job.requirements?.split('|')?.[2]?.replace('หมวดหมู่:', '')?.trim() || 'ข้าราชการ'}
                                 </span>
-                              )}
-                              
-                              <span className={`px-2 py-0.5 rounded-md text-[9.5px] font-bold border flex items-center gap-1 leading-none ${countdown.className}`}>
-                                {countdown.text}
-                              </span>
+                                
+                                {job.createdAt && isRecentJob(job.createdAt) && (
+                                  <span className="px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-[9px] font-bold tracking-wide uppercase border border-orange-200 flex items-center gap-0.5">
+                                    <Sparkles size={10} className="text-orange-600 shrink-0" />
+                                    ล่าสุด
+                                  </span>
+                                )}
+                                
+                                <span className={`px-2 py-0.5 rounded-md text-[9.5px] font-bold border flex items-center gap-1 leading-none ${countdown.className}`}>
+                                  {countdown.text}
+                                </span>
 
-                              <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1 bg-slate-50 border border-slate-100/70 px-2 py-0.5 rounded-md shrink-0 leading-none">
-                                <Eye size={12} className="text-slate-400 shrink-0" />
-                                <span>{job.views !== undefined ? job.views.toLocaleString() : '1'} ครั้ง</span>
-                              </span>
+                                <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1 bg-slate-50 border border-slate-100/70 px-2 py-0.5 rounded-md shrink-0 leading-none">
+                                  <Eye size={12} className="text-slate-400 shrink-0" />
+                                  <span>{job.views !== undefined ? job.views.toLocaleString() : '1'} ครั้ง</span>
+                                </span>
+                              </div>
+
+                              {/* Position job Title (No truncation now!) */}
+                              <h4 className="font-bold text-slate-800 group-hover:text-blue-700 transition duration-155 text-sm md:text-base leading-snug font-sans break-words whitespace-normal">
+                                {job.title}
+                              </h4>
+
+                              {/* Core Details Spec List (Flex on desktop/screen size, clean flow) */}
+                              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-y-2 gap-x-4 text-xs text-slate-500 pt-1">
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <Building2 size={13} className="text-slate-400 shrink-0" />
+                                  <span className="font-semibold text-slate-705">{job.department}</span>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <Calendar size={13} className="text-slate-400 shrink-0" />
+                                  <span className="text-slate-600">{job.period}</span>
+                                </div>
+
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold shrink-0">
+                                    วุฒิที่ระบุ
+                                  </span>
+                                  <span className="text-slate-600 truncate">
+                                    {job.education_level || job.requirements?.split('|')?.[0]?.trim() || 'ปริญญาตรีขึ้นไป'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right grouping - Salary and buttons */}
+                          <div className="pt-4 md:pt-0 mt-2 md:mt-0 border-t md:border-t-0 border-slate-50 flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 shrink-0 w-full md:w-auto">
+                            {job.total_positions && (
+                              <div className="bg-orange-550 bg-gradient-to-r from-orange-500 to-amber-550 text-white font-extrabold px-3 py-1.5 md:py-2 rounded-2xl flex items-center gap-2 shadow-[0_4px_12px_rgba(249,115,22,0.3)] transition-all duration-150 shrink-0 border border-orange-400 select-none">
+                                <span className="text-[10px] font-bold tracking-wider text-orange-100">ด่วน! เปิดรับ</span>
+                                <span className="text-xl md:text-2xl font-black font-mono leading-none">{job.total_positions}</span>
+                                <span className="text-xs font-bold text-orange-100">อัตรา</span>
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-1.5 text-slate-700 text-xs font-semibold">
+                              <CircleDollarSign size={15} className="text-blue-600 shrink-0" />
+                              <span className="text-slate-900 font-bold md:text-sm">{job.salary}</span>
                             </div>
 
-                            {/* Position job Title (No truncation now!) */}
-                            <h4 className="font-bold text-slate-800 group-hover:text-blue-700 transition duration-155 text-sm md:text-base leading-snug font-sans break-words whitespace-normal">
-                              {job.title}
-                            </h4>
-
-                            {/* Core Details Spec List (Flex on desktop/screen size, clean flow) */}
-                            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-y-2 gap-x-4 text-xs text-slate-500 pt-1">
-                              <div className="flex items-center gap-2 shrink-0">
-                                <Building2 size={13} className="text-slate-400 shrink-0" />
-                                <span className="font-semibold text-slate-705">{job.department}</span>
-                              </div>
-
-                              <div className="flex items-center gap-2 shrink-0">
-                                <Calendar size={13} className="text-slate-400 shrink-0" />
-                                <span className="text-slate-600">{job.period}</span>
-                              </div>
-
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold shrink-0">
-                                  วุฒิที่ระบุ
-                                </span>
-                                <span className="text-slate-600 truncate">
-                                  {job.education_level || job.requirements?.split('|')?.[0]?.trim() || 'ปริญญาตรีขึ้นไป'}
-                                </span>
-                              </div>
-                            </div>
+                            <span className="text-blue-600 font-bold text-xs flex items-center gap-1 group-hover:translate-x-1.5 transition-all bg-blue-50/60 group-hover:bg-blue-50 px-4 py-2 rounded-xl">
+                              อ่านต่อและแชร์
+                              <ArrowRight size={14} />
+                            </span>
                           </div>
                         </div>
+                      </motion.div>
 
-                        {/* Right grouping - Salary and buttons. Divider Line on small resolution screens */}
-                        <div className="pt-4 md:pt-0 mt-2 md:mt-0 border-t md:border-t-0 border-slate-50 flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center gap-3 shrink-0 w-full md:w-auto">
-                          <div className="flex items-center gap-1.5 text-slate-700 text-xs font-semibold">
-                            <CircleDollarSign size={15} className="text-blue-600 shrink-0" />
-                            <span className="text-slate-900 font-bold md:text-sm">{job.salary}</span>
+                      {/* Google AdSense In-Feed Native Ad Unit - Displayed after every 4th list card (except the very last one) */}
+                      {(idx + 1) % 4 === 0 && (idx + 1) !== displayJobs.length && (
+                        <div id={`adsense-infeed-${idx}`} className="w-full bg-slate-50/40 rounded-3xl border border-dashed border-slate-200/80 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 transition duration-200 hover:bg-slate-50/80 select-none">
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-350 text-[10px] font-bold tracking-tight shrink-0 shadow-2xs">
+                              ADS
+                            </div>
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 text-[8.5px] font-bold tracking-wider uppercase border border-slate-200/40">
+                                  SPONSORED
+                                </span>
+                                <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">ผู้สนับสนุน</span>
+                              </div>
+                              <h5 className="font-bold text-slate-650 text-xs sm:text-sm">ข่าวด่วน/เคล็ดลับสิทธิ์สอบรับราชการปี 2569</h5>
+                              <p className="text-[10.5px] text-slate-400">โฆษณาแนะนำหนังสือเฉลยข้อสอบ ภาค ก และตัวช่วยเตรียมสอบแข่งขัน</p>
+                            </div>
                           </div>
-
-                          <span className="text-blue-600 font-bold text-xs flex items-center gap-1 group-hover:translate-x-1.5 transition-all bg-blue-50/60 group-hover:bg-blue-50 px-4 py-2 rounded-xl">
-                            อ่านต่อและแชร์
-                            <ArrowRight size={14} />
+                          {/* In-feed Ad script tag code
+                            <ins className="adsbygoogle"
+                                 style={{ display: 'block' }}
+                                 data-ad-format="fluid"
+                                 data-ad-layout-key="-fb+5w+4e-db+86"
+                                 data-ad-client="ca-pub-8865019487278078"
+                                 data-ad-slot="YOUR-IN-FEED-AD-SLOT"></ins>
+                            <script>
+                                 (adsbygoogle = window.adsbygoogle || []).push({});
+                            </script>
+                          */}
+                          <span className="shrink-0 text-slate-350 text-[9px] font-mono border border-slate-150/80 rounded-lg px-2 py-1 select-none">
+                            In-Feed Ad Unit
                           </span>
                         </div>
-                      </div>
-                    </motion.div>
+                      )}
+                    </Fragment>
                   );
                 })}
               </div>
