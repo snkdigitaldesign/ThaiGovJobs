@@ -26,6 +26,7 @@ export interface JobItem {
   logo_url?: string;
   pdf_url?: string;
   views?: number;
+  total_positions?: number;
 }
 
 function formatThaiDate(dateString: string): string {
@@ -160,7 +161,8 @@ export async function GET() {
           application_end_date: item.application_end_date,
           logo_url: item.logo_url,
           pdf_url: item.pdf_url,
-          views: item.views || 0
+          views: item.views || 0,
+          total_positions: item.total_positions || undefined
         }));
 
         // Merge manual in-memory entries to keep them synchronized (such as those saved under mock bypass)
@@ -218,7 +220,8 @@ export async function POST(req: NextRequest) {
         application_end_date: jobData.application_end_date || null,
         source_url: jobData.officialUrl || jobData.source_url || 'https://www.gprocurement.go.th',
         logo_url: jobData.logo_url || null,
-        pdf_url: jobData.pdf_url || null
+        pdf_url: jobData.pdf_url || null,
+        total_positions: jobData.total_positions || null
       };
 
       const { data, error } = await supabase
@@ -252,7 +255,8 @@ export async function POST(req: NextRequest) {
           application_start_date: data.application_start_date,
           application_end_date: data.application_end_date,
           logo_url: data.logo_url,
-          pdf_url: data.pdf_url
+          pdf_url: data.pdf_url,
+          total_positions: data.total_positions || undefined
         };
 
         // Also update memory cache to keep in sync
@@ -267,6 +271,7 @@ export async function POST(req: NextRequest) {
           officialUrl: mappedSaved.officialUrl,
           logo_url: mappedSaved.logo_url,
           pdf_url: mappedSaved.pdf_url,
+          total_positions: mappedSaved.total_positions,
           isQuickScrape: false
         });
 
@@ -289,6 +294,7 @@ export async function POST(req: NextRequest) {
       officialUrl: jobData.officialUrl || 'https://www.google.com',
       logo_url: jobData.logo_url || '',
       pdf_url: jobData.pdf_url || '',
+      total_positions: jobData.total_positions || undefined,
       isQuickScrape: jobData.isQuickScrape || false
     });
 
