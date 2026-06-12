@@ -51,6 +51,7 @@ interface JobItem {
   source_url?: string;
   logo_url?: string;
   pdf_url?: string;
+  total_positions?: number;
 }
 
 function formatThaiDate(dateString: string): string {
@@ -216,7 +217,8 @@ export default function AdminDashboard() {
       application_start_date: job.application_start_date || '',
       application_end_date: job.application_end_date || '',
       logo_url: job.logo_url || '',
-      pdf_url: job.pdf_url || ''
+      pdf_url: job.pdf_url || '',
+      total_positions: job.total_positions
     });
   };
 
@@ -248,7 +250,8 @@ export default function AdminDashboard() {
           source_url: editingJob.officialUrl || editingJob.source_url || '',
           content: editingJob.description,
           logo_url: editingJob.logo_url || null,
-          pdf_url: editingJob.pdf_url || null
+          pdf_url: editingJob.pdf_url || null,
+          total_positions: editingJob.total_positions || null
         })
       });
 
@@ -660,7 +663,7 @@ export default function AdminDashboard() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">หน่วยงาน *</label>
                       <input
@@ -679,6 +682,18 @@ export default function AdminDashboard() {
                         required
                         value={editingJob.salary}
                         onChange={(e) => setEditingJob({ ...editingJob, salary: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">จำนวนอัตราที่รับ (ตำแหน่ง)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editingJob.total_positions || ''}
+                        onChange={(e) => setEditingJob({ ...editingJob, total_positions: e.target.value ? parseInt(e.target.value) : undefined })}
+                        placeholder="เช่น 5 (เว้นว่างไว้หากไม่ระบุ)"
                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 text-sm"
                       />
                     </div>
